@@ -12,7 +12,8 @@ export EDITOR=vim
 export ANDROID_HOME=$HOME/Android/Sdk
 export ANDROID_SDK_ROOT=$HOME/Android/Sdk
 export ANDROID_AVD_HOME=$HOME/.android/avd
-export PATH=$PATH:$HOME/bin:/usr/local/bin:/home/jweaker/python/v3.9.12/bin:$HOME/.cargo/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/tools:/usr/local/go/bin
+export BUN_INSTALL="$HOME/.bun" 
+export PATH=$PATH:$HOME/bin:/usr/local/bin:/home/jweaker/python/v3.9.12/bin:$HOME/.cargo/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/tools:/usr/local/go/bin:$BUN_INSTALL/bin
 
 # Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
