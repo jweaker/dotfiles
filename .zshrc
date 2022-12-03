@@ -15,6 +15,11 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
+zstyle ':autocomplete:*' fzf-completion yes
+zstyle ':autocomplete:*' min-delay 0.01 
+zstyle ':autocomplete:history-search:*' list-lines 25
+zstyle ':autocomplete:*' list-lines 25 
+
 export EDITOR=code
 export ANDROID_HOME=$HOME/Android/Sdk
 export ANDROID_SDK_ROOT=$HOME/Android/Sdk
