@@ -1,16 +1,5 @@
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
-
-export EDITOR=vim
-export ANDROID_HOME=$HOME/Android/Sdk
-export ANDROID_SDK_ROOT=$HOME/Android/Sdk
-export ANDROID_AVD_HOME=$HOME/.android/avd
-export BUN_INSTALL="$HOME/.bun" 
-export PATH=$PATH:$HOME/bin:/usr/local/bin:$HOME/.cargo/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/tools:/usr/local/go/bin:$BUN_INSTALL/bin
-
-[[ -f ~/Git/zsh-autocomplete/zsh-autocomplete.plugin.zsh ]] ||
-    git clone --depth 1 -- https://github.com/marlonrichert/zsh-autocomplete.git ~/Git/zsh-autocomplete
+[[ -f ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh ]] ||
+    git clone --depth 1 -- https://github.com/marlonrichert/zsh-autocomplete.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autocomplete
 
 [[ -f ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/themes/powerlevel10k/powerlevel10k.zsh-theme ]] ||
     git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/.oh-my-zsh/custom/themes/powerlevel10k
@@ -22,7 +11,16 @@ export PATH=$PATH:$HOME/bin:/usr/local/bin:$HOME/.cargo/bin:$ANDROID_SDK_ROOT/pl
     git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 
 
-source ~/Git/zsh-autocomplete/zsh-autocomplete.plugin.zsh
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+export EDITOR=code
+export ANDROID_HOME=$HOME/Android/Sdk
+export ANDROID_SDK_ROOT=$HOME/Android/Sdk
+export ANDROID_AVD_HOME=$HOME/.android/avd
+export BUN_INSTALL="$HOME/.bun" 
+export PATH=$PATH:$HOME/bin:/usr/local/bin:$HOME/.cargo/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/tools:/usr/local/go/bin:$BUN_INSTALL/bin:$HOME/.local/bin
 
 
 export ZSH="$HOME/.oh-my-zsh"
@@ -36,6 +34,7 @@ dirhistory
 jsontools
 sudo
 zsh-autosuggestions
+zsh-autocomplete
 web-search
 dirhistory
 copypath
@@ -54,10 +53,15 @@ then
 	alias i="sudo dnf install "
 	alias upg="sudo dnf upgrade "
 else
-	alias apt=\\nala apts=\\apt
+	echo tsest
 	alias i="sudo apt install "
 	alias upg="sudo apt upgrade "
 	alias upd="sudo apt update "
+fi
+
+if (( $+commands[nala] ))
+then
+	alias apt=\\nala apts=\\apt
 fi
 
 if (( $+commands[lvim] ))
@@ -66,3 +70,4 @@ then
 fi
 
 bindkey '^H' backward-kill-word
+
