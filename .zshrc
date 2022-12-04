@@ -58,7 +58,6 @@ then
 	alias i="sudo dnf install "
 	alias upg="sudo dnf upgrade "
 else
-	echo tsest
 	alias i="sudo apt install "
 	alias upg="sudo apt upgrade "
 	alias upd="sudo apt update "
