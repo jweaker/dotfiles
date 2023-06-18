@@ -70,9 +70,9 @@ then
 	alias apt=\\nala apts=\\apt
 fi
 
-if (( $+commands[lvim] ))
+if (( $+commands[nvim] ))
 then
-	alias vim="lvim "
+	alias vim="nvim "
 fi
 
 bindkey '^H' backward-kill-word
