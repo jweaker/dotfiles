@@ -70,8 +70,10 @@ then
 	alias apt=\\nala apts=\\apt
 fi
 
-if (( $+commands[nvim] ))
+if (( $+commands[lvim] ))
 then
+	alias vim="lvim "
+elif (( $+commands[nvim] ))
 	alias vim="nvim "
 fi
 
