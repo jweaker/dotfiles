@@ -74,6 +74,7 @@ if (( $+commands[lvim] ))
 then
 	alias vim="lvim "
 elif (( $+commands[nvim] ))
+then
 	alias vim="nvim "
 fi
 
