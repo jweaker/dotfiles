@@ -27,7 +27,7 @@ export ANDROID_HOME=$HOME/Android/Sdk
 export ANDROID_SDK_ROOT=$HOME/Android/Sdk
 export ANDROID_AVD_HOME=$HOME/.android/avd
 export BUN_INSTALL="$HOME/.bun" 
-export PATH=$PATH:$HOME/bin:/usr/local/bin:$HOME/.cargo/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/tools:/usr/local/go/bin:$BUN_INSTALL/bin:$HOME/.local/bin
+export PATH=$PATH:/usr/local/bin:$HOME/.cargo/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/tools:/usr/local/go/bin:$BUN_INSTALL/bin:$HOME/.local/bin
 
 
 export ZSH="$HOME/.oh-my-zsh"
