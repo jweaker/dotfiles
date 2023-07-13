@@ -11,7 +11,7 @@
     git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 
 [[ -f ${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions/zsh-completions.plugin.zsh ]] ||
-  git clone https://github.com/zsh-users/zsh-completions ${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions
+    git clone https://github.com/zsh-users/zsh-completions ${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions
 
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
@@ -22,12 +22,11 @@ zstyle ':autocomplete:*' min-delay 0.01
 zstyle ':autocomplete:history-search:*' list-lines 25
 zstyle ':autocomplete:*' list-lines 25 
 
-export EDITOR=code
+export EDITOR=vim
 export ANDROID_HOME=$HOME/Android/Sdk
 export ANDROID_SDK_ROOT=$HOME/Android/Sdk
 export ANDROID_AVD_HOME=$HOME/.android/avd
-export BUN_INSTALL="$HOME/.bun" 
-export PATH=$PATH:/usr/local/bin:$HOME/.cargo/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/tools:/usr/local/go/bin:$BUN_INSTALL/bin:$HOME/.local/bin
+export PATH=$PATH:/usr/local/bin:$HOME/.cargo/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/tools:/usr/local/go/bin:$HOME/.local/bin
 
 
 export ZSH="$HOME/.oh-my-zsh"
@@ -37,7 +36,6 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 plugins=(
 git
 history
-dirhistory
 jsontools
 sudo
 zsh-autosuggestions
