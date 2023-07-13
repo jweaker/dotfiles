@@ -1,27 +1,4 @@
-[[ -f ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh ]] ||
-    git clone --depth 1 -- https://github.com/marlonrichert/zsh-autocomplete.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autocomplete
-
-[[ -f ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/themes/powerlevel10k/powerlevel10k.zsh-theme ]] ||
-    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/.oh-my-zsh/custom/themes/powerlevel10k
-
-[[ -f ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] ||
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
-
-[[ -f ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ]] ||
-    git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
-
-[[ -f ${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions/zsh-completions.plugin.zsh ]] ||
-    git clone https://github.com/zsh-users/zsh-completions ${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions
-
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
-
-zstyle ':autocomplete:*' fzf-completion yes
-zstyle ':autocomplete:*' min-delay 0.01 
-zstyle ':autocomplete:history-search:*' list-lines 25
-zstyle ':autocomplete:*' list-lines 25 
-
+export ZSH="$HOME/.zsh"
 export EDITOR=vim
 export ANDROID_HOME=$HOME/Android/Sdk
 export ANDROID_SDK_ROOT=$HOME/Android/Sdk
@@ -29,26 +6,37 @@ export ANDROID_AVD_HOME=$HOME/.android/avd
 export PATH=$PATH:/usr/local/bin:$HOME/.cargo/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/tools:/usr/local/go/bin:$HOME/.local/bin
 
 
-export ZSH="$HOME/.oh-my-zsh"
+[[ -f ${ZSH}/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh ]] ||
+    git clone --depth 1 -- https://github.com/marlonrichert/zsh-autocomplete.git ${ZSH}/plugins/zsh-autocomplete
 
-ZSH_THEME="powerlevel10k/powerlevel10k"
+[[ -f ${ZSH}/themes/powerlevel10k/powerlevel10k.zsh-theme ]] ||
+    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH}/themes/powerlevel10k
 
-plugins=(
-git
-history
-jsontools
-sudo
-zsh-autosuggestions
-zsh-autocomplete
-web-search
-dirhistory
-copypath
-copyfile
-copybuffer
-zsh-syntax-highlighting
-)
-fpath+=${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions/src
-source $ZSH/oh-my-zsh.sh
+[[ -f ${ZSH}/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] ||
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH}/plugins/zsh-syntax-highlighting
+
+[[ -f ${ZSH}/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ]] ||
+    git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH}/plugins/zsh-autosuggestions
+
+[[ -f ${ZSH}/plugins/zsh-completions/zsh-completions.plugin.zsh ]] ||
+    git clone https://github.com/zsh-users/zsh-completions ${ZSH}/plugins/zsh-completions
+
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+source ${ZSH}/themes/powerlevel10k/powerlevel10k.zsh-theme
+source ${ZSH}/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh
+source ${ZSH}/plugins/zsh-autosuggestions/zsh-autosuggestions.plugin.zsh
+source ${ZSH}/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+fpath+=${ZSH}/plugins/zsh-completions/src
+
+
+zstyle ':autocomplete:*' fzf-completion yes
+zstyle ':autocomplete:*' min-delay 0.01 
+zstyle ':autocomplete:history-search:*' list-lines 25
+zstyle ':autocomplete:*' list-lines 25 
 
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
@@ -77,4 +65,6 @@ then
 fi
 
 bindkey '^H' backward-kill-word
+bindkey "^[[1;5C" forward-word
+bindkey "^[[1;5D" backward-word
 
