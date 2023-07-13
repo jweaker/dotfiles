@@ -4,6 +4,11 @@ export ANDROID_HOME=$HOME/Android/Sdk
 export ANDROID_SDK_ROOT=$HOME/Android/Sdk
 export ANDROID_AVD_HOME=$HOME/.android/avd
 export PATH=$PATH:/usr/local/bin:$HOME/.cargo/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/tools:/usr/local/go/bin:$HOME/.local/bin
+export HISTFILE="$HOME/.zsh_history"
+export HISTSIZE=100000
+export SAVEHIST=100000
+setopt HIST_IGNORE_ALL_DUPS
+setopt HIST_FIND_NO_DUPS
 
 
 [[ -f ${ZSH}/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh ]] ||
@@ -25,13 +30,20 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
+autoload -Uz compinit
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 
+zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
+zstyle ':completion:*' rehash true  
+zmodload zsh/complist
+compinit
+
 source ${ZSH}/themes/powerlevel10k/powerlevel10k.zsh-theme
 source ${ZSH}/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh
 source ${ZSH}/plugins/zsh-autosuggestions/zsh-autosuggestions.plugin.zsh
 source ${ZSH}/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
-fpath+=${ZSH}/plugins/zsh-completions/src
-
+fpath+=(${ZSH}/plugins/zsh-completions/src $fpath)
 
 zstyle ':autocomplete:*' fzf-completion yes
 zstyle ':autocomplete:*' min-delay 0.01 
@@ -51,6 +63,10 @@ else
 	alias upd="sudo apt update "
 fi
 
+if (( $+commands[lvim] ))
+then
+	alias ls="exa --icons "
+fi
 if (( $+commands[nala] ))
 then
 	alias apt=\\nala apts=\\apt
