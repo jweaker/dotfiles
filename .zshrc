@@ -35,17 +35,12 @@ export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="powerlevel10k/powerlevel10k"
 
 plugins=(
-git
 history
-jsontools
 sudo
 zsh-autosuggestions
 zsh-autocomplete
 web-search
 dirhistory
-copypath
-copyfile
-copybuffer
 zsh-syntax-highlighting
 )
 fpath+=${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions/src
