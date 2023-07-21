@@ -54,8 +54,8 @@ zstyle ':autocomplete:*' list-lines 25
 if (( $+commands[pacman] ))
 then
 
-	alias i="pacman -Syu "
-	alias upg="pacman -Syu "
+	alias i="sudo pacman -Syu "
+	alias upg="sudo pacman -Syu "
 elif (( $+commands[apt] ))
 then
 	alias i="sudo apt install "
