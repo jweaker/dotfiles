@@ -19,13 +19,6 @@ export ZSH="$HOME/.zsh"
 [[ -f $ZSH/plugins/zsh-completions/zsh-completions.plugin.zsh ]] ||
     git clone https://github.com/zsh-users/zsh-completions $ZSH/plugins/zsh-completions
 
-autoload -Uz compinit
-zstyle ':completion:*' menu select
-zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 
-zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
-zstyle ':completion:*' rehash true  
-zmodload zsh/complist
-compinit
 
 source $ZSH/themes/powerlevel10k/powerlevel10k.zsh-theme
 source $ZSH/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh
@@ -33,6 +26,14 @@ source $ZSH/plugins/zsh-autosuggestions/zsh-autosuggestions.plugin.zsh
 source $ZSH/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 fpath+=($ZSH/plugins/zsh-completions/src $fpath)
+
+autoload -Uz compinit
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 
+zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
+zstyle ':completion:*' rehash true  
+zmodload zsh/complist
+compinit
 
 zstyle ':autocomplete:*' fzf-completion yes
 zstyle ':autocomplete:*' min-delay 0.01 
