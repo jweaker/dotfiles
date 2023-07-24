@@ -49,8 +49,6 @@ export PATH=$PATH:/usr/local/bin:$HOME/.cargo/bin:$ANDROID_SDK_ROOT/platform-too
 export HISTFILE=~/.zsh_history
 export HISTSIZE=1000000
 export SAVEHIST=$HISTSIZE
-setopt hist_ignore_all_dups
-setopt hist_ignore_space
 
 if (( $+commands[pacman] ))
 then
@@ -87,6 +85,7 @@ fi
 
 WORDCHARS=${WORDCHARS/\/}
 
+bindkey -e
 bindkey '^H' backward-kill-word
 bindkey "^[[1;5C" forward-word
 bindkey "^[[1;5D" backward-word
