@@ -19,11 +19,29 @@ export ZSH="$HOME/.zsh"
 [[ -f $ZSH/plugins/zsh-completions/zsh-completions.plugin.zsh ]] ||
     git clone https://github.com/zsh-users/zsh-completions $ZSH/plugins/zsh-completions
 
+if [[ ! -f $ZSH/plugins/omz/sudo.plugin.zsh ]]; then
+  mkdir $ZSH/plugins/omz/
+  curl https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/plugins/sudo/sudo.plugin.zsh -o  $ZSH/plugins/omz/sudo.plugin.zsh
+fi
+
+if [[ -z "$(fc-list 'JetBrainsMono Nerd Font')" ]]; then
+  mkdir -p ~/.local/share/fonts/
+  mkdir -p ~/.local/share/fonts/jetbrains/
+  cd ~/.local/share/fonts/jetbrains/
+  curl -OL 'https://github.com/ryanoasis/nerd-fonts/releases/download/latest/JetBrainsMono.tar.xz'
+  xz -d JetBrainsMono.tar.xz
+  tar -xf JetBrainsMono.tar
+  rm JetBrainsMono.tar
+  cd
+fi
+
+  
 
 source $ZSH/themes/powerlevel10k/powerlevel10k.zsh-theme
 source $ZSH/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh
 source $ZSH/plugins/zsh-autosuggestions/zsh-autosuggestions.plugin.zsh
 source $ZSH/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+source $ZSH/plugins/omz/sudo.plugin.zsh
 
 fpath+=($ZSH/plugins/zsh-completions/src $fpath)
 
@@ -36,9 +54,10 @@ zmodload zsh/complist
 compinit
 
 zstyle ':autocomplete:*' fzf-completion yes
-zstyle ':autocomplete:*' min-delay 0.01 
+zstyle ':autocomplete:*' min-delay 0.05 
 zstyle ':autocomplete:history-search:*' list-lines 25
 zstyle ':autocomplete:*' list-lines 25 
+zstyle ':autocomplete:history-search-backward:*' list-lines 256
 
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
@@ -48,7 +67,7 @@ export ANDROID_SDK_ROOT=$HOME/Android/Sdk
 export ANDROID_AVD_HOME=$HOME/.android/avd
 export PATH=$PATH:/usr/local/bin:$HOME/.cargo/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/tools:/usr/local/go/bin:$HOME/.local/bin
 export HISTFILE=~/.zsh_history
-export HISTSIZE=1000000
+export HISTSIZE=10000000
 export SAVEHIST=$HISTSIZE
 
 if (( $+commands[pacman] ))
@@ -93,3 +112,4 @@ bindkey "^[[1;5D" backward-word
 bindkey  "^[[H"   beginning-of-line
 bindkey  "^[[F"   end-of-line
 bindkey  "^[[3~"  delete-char
+
