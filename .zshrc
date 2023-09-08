@@ -98,9 +98,17 @@ fi
 if (( $+commands[lvim] ))
 then
 	alias vim="lvim "
+  if (( $+commands[neovide] ))
+  then
+    alias vimg="neovide --neovim-bin $(which lvim) --multigrid "
+  fi
 elif (( $+commands[nvim] ))
 then
 	alias vim="nvim "
+  if (( $+commands[neovide] ))
+  then
+    alias vimg="neovide --multigrid"
+  fi
 fi
 
 WORDCHARS=${WORDCHARS/\/}
@@ -113,3 +121,10 @@ bindkey  "^[[H"   beginning-of-line
 bindkey  "^[[F"   end-of-line
 bindkey  "^[[3~"  delete-char
 
+
+# bun completions
+[ -s "/home/jweaker/.bun/_bun" ] && source "/home/jweaker/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
