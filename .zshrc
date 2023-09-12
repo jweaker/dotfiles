@@ -25,6 +25,8 @@ if [[ ! -f $ZSH/plugins/omz/sudo.plugin.zsh ]]; then
 fi
 
 if [[ -z "$(fc-list 'JetBrainsMono Nerd Font')" ]]; then
+  mkdir -p ~/.local/
+  mkdir -p ~/.local/share/
   mkdir -p ~/.local/share/fonts/
   mkdir -p ~/.local/share/fonts/jetbrains/
   cd ~/.local/share/fonts/jetbrains/
