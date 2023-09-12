@@ -34,7 +34,7 @@ if [[ -z "$(fc-list 'JetBrainsMono Nerd Font')" ]]; then
   xz -d JetBrainsMono.tar.xz
   tar -xf JetBrainsMono.tar
   rm JetBrainsMono.tar
-  cd
+  cd 
 fi
 
   
