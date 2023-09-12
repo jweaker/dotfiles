@@ -30,7 +30,7 @@ if [[ -z "$(fc-list 'JetBrainsMono Nerd Font')" ]]; then
   mkdir -p ~/.local/share/fonts/
   mkdir -p ~/.local/share/fonts/jetbrains/
   cd ~/.local/share/fonts/jetbrains/
-  curl -OL 'https://github.com/ryanoasis/nerd-fonts/releases/download/latest/JetBrainsMono.tar.xz'
+  curl -OL 'https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.tar.xz'
   xz -d JetBrainsMono.tar.xz
   tar -xf JetBrainsMono.tar
   rm JetBrainsMono.tar
