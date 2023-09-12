@@ -123,7 +123,7 @@ bindkey  "^[[3~"  delete-char
 
 
 # bun completions
-[ -s "/home/jweaker/.bun/_bun" ] && source "/home/jweaker/.bun/_bun"
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 
 # bun
 export BUN_INSTALL="$HOME/.bun"
