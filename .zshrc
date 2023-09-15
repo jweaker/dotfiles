@@ -72,6 +72,13 @@ export HISTFILE=~/.zsh_history
 export HISTSIZE=10000000
 export SAVEHIST=$HISTSIZE
 
+# bun completions
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
 if (( $+commands[pacman] ))
 then
 	alias i="sudo pacman -Syu "
@@ -87,7 +94,10 @@ then
 	alias upg="sudo dnf upgrade "
 fi
 
-if (( $+commands[exa] ))
+if (( $+commands[eza] ))
+then
+	alias ls="eza --icons "
+elif (( $+commands[exa] ))
 then
 	alias ls="exa --icons "
 fi
@@ -124,9 +134,3 @@ bindkey  "^[[F"   end-of-line
 bindkey  "^[[3~"  delete-char
 
 
-# bun completions
-[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
-
-# bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
