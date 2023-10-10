@@ -159,3 +159,6 @@ bindkey  "^[[3~"  delete-char
 
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
+
+# bun completions
+[ -s "/Users/jweaker/.bun/_bun" ] && source "/Users/jweaker/.bun/_bun"
