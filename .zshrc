@@ -70,6 +70,7 @@ zstyle ':autocomplete:history-search-backward:*' list-lines 256
 export EDITOR=vim
 
 if [[ $(uname) == "Darwin" ]]; then
+test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
   export ANDROID_HOME=$HOME/Library/Android/Sdk
   export ANDROID_SDK_ROOT=$HOME/Library/Android/Sdk
 else 
@@ -157,5 +158,4 @@ bindkey  "^[[H"   beginning-of-line
 bindkey  "^[[F"   end-of-line
 bindkey  "^[[3~"  delete-char
 
-test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
