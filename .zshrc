@@ -159,3 +159,6 @@ bindkey  "^[[F"   end-of-line
 bindkey  "^[[3~"  delete-char
 
 
+
+# bun completions
+[ -s "/Users/jweaker/.bun/_bun" ] && source "/Users/jweaker/.bun/_bun"
