@@ -51,19 +51,21 @@ source $ZSH/plugins/omz/sudo.plugin.zsh
 
 fpath+=($ZSH/plugins/zsh-completions/src $fpath)
 
-autoload -Uz compinit
-zstyle ':completion:*' menu select
-zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 
-zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
-zstyle ':completion:*' rehash true  
-zmodload zsh/complist
-compinit
+# autoload -Uz compinit
+# zstyle ':completion:*' menu select
+# zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 
+# zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
+# zstyle ':completion:*' rehash true  
+# zstyle '*:compinit' arguments -D -i -u -C -w
+# zmodload zsh/complist
+# compinit
 
 zstyle ':autocomplete:*' fzf-completion yes
 zstyle ':autocomplete:*' min-delay 0.05 
-zstyle ':autocomplete:history-search:*' list-lines 25
-zstyle ':autocomplete:*' list-lines 25 
-zstyle ':autocomplete:history-search-backward:*' list-lines 256
+# zstyle ':autocomplete:history-search:*' list-lines 25
+# zstyle ':autocomplete:*' list-lines 25 
+# zstyle ':autocomplete:history-search-backward:*' list-lines 25
+# zstyle ':autocomplete:history-search-backward:*' list-lines 256
 
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
@@ -98,6 +100,7 @@ export PATH="$HOME/.turso:$PATH"
 
 export ANDROID_AVD_HOME=$HOME/.android/avd
 export PATH="$PATH:/usr/local/bin:$HOME/.cargo/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/emulator:/$ANDROID_SDK_ROOT/tools:/usr/local/go/bin:$HOME/.local/bin"
+export PATH="$PATH:/Applications/Postgres.app/Contents/Versions/latest/bin"
 export HISTFILE=~/.zsh_history
 export HISTSIZE=10000000
 export SAVEHIST=$HISTSIZE
