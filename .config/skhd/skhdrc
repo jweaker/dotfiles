@@ -5,7 +5,7 @@ cmd + shift + ctrl - r : yabai --restart-service
 cmd + shift + ctrl - s : skhd --restart-service
 
 cmd + ctrl - n : yabai -m space --create
-cmd + ctrl - d : yabai -m space --create
+cmd + ctrl - d : yabai -m space --destroy
 
 cmd - 1 : yabai -m space --focus 1
 cmd - 2 : yabai -m space --focus 2
