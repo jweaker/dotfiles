@@ -63,13 +63,25 @@ fpath+=($ZSH/plugins/zsh-completions/src $fpath)
 zstyle ':autocomplete:*' fzf-completion yes
 zstyle ':autocomplete:*' min-delay 0.05 
 # zstyle ':autocomplete:history-search:*' list-lines 25
-# zstyle ':autocomplete:*' list-lines 25 
-# zstyle ':autocomplete:history-search-backward:*' list-lines 25
-# zstyle ':autocomplete:history-search-backward:*' list-lines 256
+# zstyle ':autocomplete:*' list-lines 25 zstyle ':autocomplete:history-search-backward:*' list-lines 25 zstyle ':autocomplete:history-search-backward:*' list-lines 256
 
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-export EDITOR=vim
+if (( $+commands[lvim] ))
+then
+  export EDITOR=lvim
+elif (( $+commands[nvim] ))
+then
+  export EDITOR=nvim
+elif (( $+commands[vim] ))
+then
+  export EDITOR=vim
+elif (( $+commands[code] ))
+then
+  export EDITOR=code
+else 
+  export EDITOR=vi
+fi
 
 if [[ $(uname) == "Darwin" ]]; then
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
@@ -106,6 +118,15 @@ export HISTFILE=~/.zsh_history
 export HISTSIZE=10000000
 export SAVEHIST=$HISTSIZE
 
+
+
+if (( $+commands[brave] ))
+then
+  export BROWSER=brave
+elif (( $+commands[firefox] ))
+then
+  export BROWSER=firefox
+fi
 
 if (( $+commands[pacman] ))
 then
@@ -163,5 +184,3 @@ bindkey  "^[[3~"  delete-char
 
 
 
-# bun completions
-[ -s "/Users/jweaker/.bun/_bun" ] && source "/Users/jweaker/.bun/_bun"
