@@ -1,10 +1,18 @@
 #!/usr/bin/env sh
 
+# for this to work you must configure sudo such that
+# it will be able to run the command without password
+
+yabai -m signal --add event=dock_did_restart action="sudo yabai --load-sa"
+sudo yabai --load-sa
+
+# .. more yabai startup stuff
+
 # global settings
 yabai -m config window_opacity               off
 yabai -m config window_topmost               on
 yabai -m config window_shadow                float
-yabai -m config auto_balance                 on
+# yabai -m config auto_balance                 on
 
 # border settings
 yabai -m config window_border                on
@@ -16,7 +24,7 @@ yabai -m config normal_window_border_color   0xff51425C
 yabai -m config mouse_modifier               alt
 yabai -m config mouse_action1                move
 yabai -m config mouse_action2                resize
-yabai -m config mouse_follows_focus          off
+yabae -m config mouse_follows_focus          off
 yabai -m config focus_follows_mouse          autoraise
 
 # general space settings
