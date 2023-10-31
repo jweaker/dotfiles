@@ -69,10 +69,7 @@ zstyle ':autocomplete:*' min-delay 0.05
 
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-if (( $+commands[lvim] ))
-then
-  export EDITOR=lvim
-elif (( $+commands[nvim] ))
+if (( $+commands[nvim] ))
 then
   export EDITOR=nvim
 elif (( $+commands[vim] ))
@@ -158,14 +155,7 @@ then
 	alias apt=\\nala apts=\\apt
 fi
 
-if (( $+commands[lvim] ))
-then
-	alias vim="lvim "
-  if (( $+commands[neovide] ))
-  then
-    alias vimg="neovide --neovim-bin $(which lvim) --multigrid "
-  fi
-elif (( $+commands[nvim] ))
+if (( $+commands[nvim] ))
 then
 	alias vim="nvim "
   if (( $+commands[neovide] ))
