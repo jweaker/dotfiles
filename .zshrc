@@ -112,6 +112,7 @@ export PATH="$HOME/.turso:$PATH"
 
 export ANDROID_AVD_HOME=$HOME/.android/avd
 export PATH="$PATH:/usr/local/bin:$HOME/.cargo/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/emulator:/$ANDROID_SDK_ROOT/tools:/usr/local/go/bin:$HOME/.local/bin"
+export PATH=$PATH:/usr/local/go/bin
 export PATH="$PATH:/Applications/Postgres.app/Contents/Versions/latest/bin"
 export HISTFILE=~/.zsh_history
 export HISTSIZE=10000000
