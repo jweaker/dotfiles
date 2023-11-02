@@ -22,6 +22,7 @@ config.window_padding = {
 	bottom = 0,
 }
 config.window_decorations = "RESIZE"
+config.window_close_confirmation = 'NeverPrompt'
 
 
 return config
