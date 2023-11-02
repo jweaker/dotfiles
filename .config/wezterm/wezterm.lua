@@ -23,6 +23,8 @@ config.window_padding = {
 }
 config.window_decorations = "RESIZE"
 config.window_close_confirmation = 'NeverPrompt'
+config.bidi_enabled = true
+config.bidi_direction = 'AutoLeftToRight'
 
 
 return config
