@@ -1,16 +1,14 @@
 #!/bin/zsh
 
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
-
 export ZSH="$HOME/.zsh"
+
+if ! foobar_loc="$(type -p "starship")" || [[ -z $foobar_loc ]]; then
+  curl -sS https://starship.rs/install.sh | sh
+fi
 
 [[ -f $ZSH/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh ]] ||
     git clone --depth 1 -- https://github.com/marlonrichert/zsh-autocomplete.git $ZSH/plugins/zsh-autocomplete
 
-[[ -f $ZSH/themes/powerlevel10k/powerlevel10k.zsh-theme ]] ||
-    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git $ZSH/themes/powerlevel10k
 
 [[ -f $ZSH/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] ||
     git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $ZSH/plugins/zsh-syntax-highlighting
@@ -45,7 +43,6 @@ if [[ $(uname) != "Darwin" ]]; then
 fi
 
 
-source $ZSH/themes/powerlevel10k/powerlevel10k.zsh-theme
 source $ZSH/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh
 source $ZSH/plugins/zsh-autosuggestions/zsh-autosuggestions.plugin.zsh
 source $ZSH/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
@@ -53,21 +50,15 @@ source $ZSH/plugins/omz/sudo.plugin.zsh
 
 fpath+=($ZSH/plugins/zsh-completions/src $fpath)
 
-# autoload -Uz compinit
-# zstyle ':completion:*' menu select
-# zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 
-# zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
-# zstyle ':completion:*' rehash true  
-# zstyle '*:compinit' arguments -D -i -u -C -w
-# zmodload zsh/complist
-# compinit
+# Completions
+zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}'
+zstyle ':completion:*' menu select
+zmodload zsh/complist
+_comp_options+=(globdots)
+autoload -U compinit && compinit
 
-zstyle ':autocomplete:*' fzf-completion yes
-zstyle ':autocomplete:*' min-delay 0.05 
-# zstyle ':autocomplete:history-search:*' list-lines 25
-# zstyle ':autocomplete:*' list-lines 25 zstyle ':autocomplete:history-search-backward:*' list-lines 25 zstyle ':autocomplete:history-search-backward:*' list-lines 256
-
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+# Colors
+autoload -Uz colors && colors
 
 if (( $+commands[nvim] ))
 then
@@ -167,13 +158,13 @@ fi
 
 WORDCHARS=${WORDCHARS/\/}
 
-bindkey -e
+bindkey -v
 bindkey '^H' backward-kill-word
+bindkey "^?" backward-delete-char
 bindkey "^[[1;5C" forward-word
 bindkey "^[[1;5D" backward-word
 bindkey  "^[[H"   beginning-of-line
 bindkey  "^[[F"   end-of-line
 bindkey  "^[[3~"  delete-char
 
-
-
+eval "$(starship init zsh)"

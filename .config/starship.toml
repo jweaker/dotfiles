@@ -1,0 +1,13 @@
+# Get editor completions based on the config schema
+"$schema" = 'https://starship.rs/config-schema.json'
+
+
+# Replace the '❯' symbol in the prompt with '➜'
+[character]
+success_symbol = "[➜](bold green)"
+error_symbol = "[➜](bold red)"
+vicmd_symbol = "[v](bold yellow)"
+
+# Disable the package module, hiding it from the prompt completely
+[aws]
+disabled = true
