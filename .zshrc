@@ -2,8 +2,40 @@
 
 export ZSH="$HOME/.zsh"
 
-if ! foobar_loc="$(type -p "starship")" || [[ -z $foobar_loc ]]; then
-    curl -sS https://starship.rs/install.sh | sh
+# if no starship and no p10k
+if [[ -f $ZSH/P10K ]] then;
+    choice=1
+    if  [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+        source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+    fi
+elif [[ ! -f $ZSH/STARSHIP ]]; then
+    echo "Choose your terminal Zsh prompt:"
+    echo "1. P10K"
+    echo "2. STARSHIP (default)"
+
+    # Read user input
+    echo -n "Choice: "
+    read choice
+
+    # Create the file based on the choice
+    if [[ $choice -eq 1 ]]; then
+        touch $ZSH/P10K
+        echo "P10K file created. run rm $ZSH/P10K to remove it."
+    else
+        choice=2
+        touch $ZSH/STARSHIP
+        echo "STARSHIP file created. run rm $ZSH/STARSHIP to remove it."
+    fi
+fi
+
+
+if [[ $choice -eq 1 ]]; then
+    [[ -f $ZSH/themes/powerlevel10k/powerlevel10k.zsh-theme ]] ||
+    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git $ZSH/themes/powerlevel10k
+else
+    if ! foobar_loc="$(type -p "starship")" || [[ -z $foobar_loc ]]; then
+        curl -sS https://starship.rs/install.sh | sh
+    fi
 fi
 
 [[ -f $ZSH/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh ]] ||
@@ -167,4 +199,10 @@ bindkey  "^[[H"   beginning-of-line
 bindkey  "^[[F"   end-of-line
 bindkey  "^[[3~"  delete-char
 
-eval "$(starship init zsh)"
+
+if [[ $choice -eq 1 ]]; then
+    source $ZSH/themes/powerlevel10k/powerlevel10k.zsh-theme
+    [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+else
+    eval "$(starship init zsh)"
+fi
