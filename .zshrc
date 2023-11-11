@@ -118,13 +118,13 @@ fi
 
 
 if [[ $(uname) == "Darwin" ]]; then
-    export PATH="/opt/homebrew/opt/openjdk@11/bin:$PATH"
     eval "$(/opt/homebrew/bin/brew shellenv)"
 fi
 
 
 # bun completions
 [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
+
 
 # bun
 export BUN_INSTALL="$HOME/.bun"
@@ -133,15 +133,16 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 # Turso
 export PATH="$HOME/.turso:$PATH"
 
+export NDK_HOME="$ANDROID_HOME/ndk/23.1.7779620"
 export ANDROID_AVD_HOME=$HOME/.android/avd
-export PATH="$PATH:/usr/local/bin:$HOME/.cargo/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/emulator:/$ANDROID_SDK_ROOT/tools:/usr/local/go/bin:$HOME/.local/bin"
-export PATH=$PATH:/usr/local/go/bin
+export PATH="$PATH:/usr/local/bin:$HOME/.cargo/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/emulator:$ANDROID_SDK_ROOT/tools:/usr/local/go/bin:$HOME/.local/bin"
+export PATH="$PATH:/usr/local/go/bin:/.jenv/bin"
 export PATH="$PATH:/Applications/Postgres.app/Contents/Versions/latest/bin"
 export HISTFILE=~/.zsh_history
 export HISTSIZE=10000000
 export SAVEHIST=$HISTSIZE
 
-
+if which jenv > /dev/null; then eval "$(jenv init -)"; fi
 
 if (( $+commands[brave] ))
 then
