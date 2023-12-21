@@ -135,6 +135,7 @@ export PATH="$HOME/.turso:$PATH"
 
 export NDK_HOME="$ANDROID_HOME/ndk/23.1.7779620"
 export ANDROID_AVD_HOME=$HOME/.android/avd
+export ANDROID_NDK_HOME=$ANDROID_HOME/ndk
 export PATH="$PATH:/usr/local/bin:$HOME/.cargo/bin:$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/emulator:$ANDROID_SDK_ROOT/tools:/usr/local/go/bin:$HOME/.local/bin"
 export PATH="$PATH:/usr/local/go/bin:/.jenv/bin"
 export PATH="$PATH:/Applications/Postgres.app/Contents/Versions/latest/bin"
