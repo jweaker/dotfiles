@@ -1,6 +1,6 @@
 # Applications
 lcmd - return : open -na /Applications/WezTerm.app
-lcmd + ctrl - b : open "/Applications/Brave Browser.app"
+lcmd + ctrl - b : open "/Applications/Arc.app"
 lcmd + ctrl - s : open /System/Applications/Utilities/Screenshot.app
 lcmd + ctrl - a : open /Applications/NormCap.app
 lcmd + shift + ctrl - r : yabai --restart-service

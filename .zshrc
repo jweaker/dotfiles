@@ -189,6 +189,7 @@ then
         alias vimg="neovide --multigrid"
     fi
 fi
+alias vimsudo="sudo visudo -f "
 
 WORDCHARS=${WORDCHARS/\/}
 
