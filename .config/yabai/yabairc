@@ -45,3 +45,4 @@ yabai -m rule --add app="^Arc$" title="^jweaker$" manage=off
 yabai -m rule --add app="^Calculator$" manage=off
 yabai -m rule --add app="^System Settings$" manage=off
 yabai -m rule --add app="^Clock$" manage=off
+yabai -m rule --add app="^Weather$" manage=off
