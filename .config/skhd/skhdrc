@@ -7,7 +7,6 @@ lcmd + shift + ctrl - r : yabai --restart-service
 lcmd + shift + ctrl - s : skhd --restart-service
 
 lctrl - 0x33 : skhd -k "alt - 0x33"
-lctrl - 0x33 : skhd -k "alt - 0x33"
 
 # create and destroy spaces
 lcmd + ctrl - n : yabai -m space --create
