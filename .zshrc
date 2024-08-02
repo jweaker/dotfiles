@@ -143,7 +143,6 @@ export HISTFILE=~/.zsh_history
 export HISTSIZE=10000000
 export SAVEHIST=$HISTSIZE
 
-if which jenv > /dev/null; then eval "$(jenv init -)"; fi
 
 if (( $+commands[brave] ))
 then
@@ -209,3 +208,8 @@ if [[ $choice -eq 1 ]]; then
 else
     eval "$(starship init zsh)"
 fi
+eval export PATH="/Users/jweaker/.jenv/shims:${PATH}"
+export JENV_SHELL=zsh
+export JENV_LOADED=1
+unset JAVA_HOME
+unset JDK_HOME
