@@ -213,3 +213,9 @@ export JENV_SHELL=zsh
 export JENV_LOADED=1
 unset JAVA_HOME
 unset JDK_HOME
+
+eval "$(zoxide init --cmd cd zsh)"
+
+export PATH="$HOME/.pyenv/bin:$PATH"
+ 
+eval "$(pyenv init -)"
