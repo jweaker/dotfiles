@@ -192,7 +192,7 @@ alias vimsudo="sudo visudo -f "
 
 WORDCHARS=${WORDCHARS/\/}
 
-bindkey -v
+bindkey -e
 bindkey '^H' backward-kill-word
 bindkey "^?" backward-delete-char
 bindkey "^[[1;5C" forward-word
@@ -219,3 +219,5 @@ eval "$(zoxide init --cmd cd zsh)"
 export PATH="$HOME/.pyenv/bin:$PATH"
  
 eval "$(pyenv init -)"
+
+setopt COMBINING_CHARS

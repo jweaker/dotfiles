@@ -18,11 +18,12 @@ config.macos_window_background_blur = 10
 config.window_padding = {
 	left = 3,
 	right = 0,
-	top = 3,
+	top = "0.9cell",
 	bottom = 0,
 }
 config.window_close_confirmation = "NeverPrompt"
 config.bidi_enabled = true
 config.bidi_direction = "AutoLeftToRight"
+config.window_decorations = "INTEGRATED_BUTTONS|RESIZE|MACOS_FORCE_ENABLE_SHADOW"
 
 return config
