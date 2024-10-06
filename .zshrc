@@ -38,9 +38,8 @@ else
     fi
 fi
 
-[[ -f $ZSH/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh ]] ||
-git clone --depth 1 -- https://github.com/marlonrichert/zsh-autocomplete.git $ZSH/plugins/zsh-autocomplete
-
+[[ -f $ZSH/plugins/fzf-tab/fzf-tab.plugin.zsh ]] ||
+git clone --depth 1 -- https://github.com/Aloxaf/fzf-tab.git $ZSH/plugins/fzf-tab
 
 [[ -f $ZSH/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] ||
 git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $ZSH/plugins/zsh-syntax-highlighting
@@ -75,7 +74,7 @@ if [[ $(uname) != "Darwin" ]]; then
 fi
 
 
-source $ZSH/plugins/zsh-autocomplete/zsh-autocomplete.plugin.zsh
+source $ZSH/plugins/fzf-tab/fzf-tab.plugin.zsh
 source $ZSH/plugins/zsh-autosuggestions/zsh-autosuggestions.plugin.zsh
 source $ZSH/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 source $ZSH/plugins/omz/sudo.plugin.zsh
@@ -83,14 +82,21 @@ source $ZSH/plugins/omz/sudo.plugin.zsh
 fpath+=($ZSH/plugins/zsh-completions/src $fpath)
 
 # Completions
-zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}'
-zstyle ':completion:*' menu select
 zmodload zsh/complist
 _comp_options+=(globdots)
 autoload -U compinit && compinit
 
 # Colors
 autoload -Uz colors && colors
+
+
+
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
+zstyle ':fzf-tab:*' switch-group '<' '>'
+# zstyle ':fzf-tab:*' fzf-command ftb-tmux-popup
+
+bindkey '^F' autosuggest-accept
+
 
 if (( $+commands[nvim] ))
 then
@@ -192,7 +198,7 @@ alias vimsudo="sudo visudo -f "
 
 WORDCHARS=${WORDCHARS/\/}
 
-bindkey -e
+bindkey -v
 bindkey '^H' backward-kill-word
 bindkey "^?" backward-delete-char
 bindkey "^[[1;5C" forward-word
