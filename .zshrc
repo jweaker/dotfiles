@@ -150,13 +150,7 @@ export HISTSIZE=10000000
 export SAVEHIST=$HISTSIZE
 
 
-if (( $+commands[brave] ))
-then
-    export BROWSER=brave
-elif (( $+commands[firefox] ))
-then
-    export BROWSER=firefox
-fi
+export BROWSER=/var/lib/flatpak/exports/bin/app.zen_browser.zen
 
 if (( $+commands[pacman] ))
 then

@@ -18,7 +18,7 @@ config.macos_window_background_blur = 10
 config.window_padding = {
 	left = 3,
 	right = 0,
-	top = "0.9cell",
+	top = 3,
 	bottom = 0,
 }
 config.window_close_confirmation = "NeverPrompt"
