@@ -1,0 +1,32 @@
+{
+    "874b5994-c2ec-4617-b036-3ff33a276c82": {
+        "id": "874b5994-c2ec-4617-b036-3ff33a276c82",
+        "name": "Google Search",
+        "keyword": "g",
+        "cmd": "https://google.com/search?q=%s",
+        "icon": "/usr/share/ulauncher/media/google-search-icon.png",
+        "is_default_search": false,
+        "run_without_argument": false,
+        "added": 1749400682.5848367
+    },
+    "f0ff7532-2ac3-419d-a4c8-711015b6efd7": {
+        "id": "f0ff7532-2ac3-419d-a4c8-711015b6efd7",
+        "name": "Stack Overflow",
+        "keyword": "so",
+        "cmd": "https://stackoverflow.com/search?q=%s",
+        "icon": "/usr/share/ulauncher/media/stackoverflow-icon.svg",
+        "is_default_search": false,
+        "run_without_argument": false,
+        "added": 1749400682.5848682
+    },
+    "cfc68e6b-cdd1-4bc4-b9f1-385dc6361396": {
+        "id": "cfc68e6b-cdd1-4bc4-b9f1-385dc6361396",
+        "name": "unduck",
+        "keyword": "u",
+        "cmd": "#!/bin/bash\n~/.config/ulauncher/scripts/awesome $*",
+        "icon": null,
+        "is_default_search": true,
+        "run_without_argument": false,
+        "added": 1749562268.839131
+    }
+}

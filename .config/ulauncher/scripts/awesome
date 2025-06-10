@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# Capture search query from arguments
+query="$*"
+# Open in Zen-Browser
+flatpak run app.zen_browser.zen "https://unduck.link?q=$query"
+awesome-client "focus_browser()"
