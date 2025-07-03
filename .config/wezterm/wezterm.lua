@@ -13,12 +13,13 @@ end
 config.font = wezterm.font("JetBrainsMono Nerd Font")
 config.font_size = 16.0
 config.hide_tab_bar_if_only_one_tab = true
+config.warn_about_missing_glyphs=false
 config.window_background_opacity = 1
 config.macos_window_background_blur = 10
 config.window_padding = {
-	left = 3,
+	left = 6,
 	right = 0,
-	top = 3,
+	top = 6,
 	bottom = 0,
 }
 config.window_close_confirmation = "NeverPrompt"

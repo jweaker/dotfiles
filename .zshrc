@@ -63,10 +63,8 @@ if [[ $(uname) != "Darwin" ]]; then
         mkdir -p ~/.local/share/fonts/
         mkdir -p ~/.local/share/fonts/jetbrains/
         cd ~/.local/share/fonts/jetbrains/
-        curl -OL 'https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.tar.xz'
+        curl -OL 'https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/JetBrainsMono.tar.xz'
         xz -d JetBrainsMono.tar.xz
-        tar -xf JetBrainsMono.tar
-        rm JetBrainsMono.tar
         tar -xf JetBrainsMono.tar
         rm JetBrainsMono.tar
         cd
