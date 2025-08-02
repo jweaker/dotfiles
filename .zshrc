@@ -227,3 +227,6 @@ export PATH="/opt/homebrew/opt/icu4c@74/sbin:$PATH"
 # tabtab source for electron-forge package
 # uninstall by removing these lines or running `tabtab uninstall electron-forge`
 [[ -f /Users/jweaker/Library/Caches/pnpm/dlx/251c548fdc85db28c4b2575eed26177cddb1af79b480069173a8462a166c07fc/1960ca67160-f75f/node_modules/.pnpm/tabtab@2.2.2/node_modules/tabtab/.completions/electron-forge.zsh ]] && . /Users/jweaker/Library/Caches/pnpm/dlx/251c548fdc85db28c4b2575eed26177cddb1af79b480069173a8462a166c07fc/1960ca67160-f75f/node_modules/.pnpm/tabtab@2.2.2/node_modules/tabtab/.completions/electron-forge.zsh
+
+# opencode
+export PATH=/Users/jweaker/.opencode/bin:$PATH

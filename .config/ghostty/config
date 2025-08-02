@@ -1,0 +1,8 @@
+font-family="JetBrainsMono Nerd Font"
+font-size=16
+background-opacity=0.9
+background-blur=true
+background="#000000"
+window-padding-color=extend
+theme=catppuccin-mocha
+macos-titlebar-style=tabs

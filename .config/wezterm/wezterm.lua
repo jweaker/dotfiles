@@ -17,9 +17,9 @@ config.warn_about_missing_glyphs=false
 config.window_background_opacity = 1
 config.macos_window_background_blur = 10
 config.window_padding = {
-	left = 6,
+	left = 3,
 	right = 0,
-	top = 6,
+	top = "1cell",
 	bottom = 0,
 }
 config.window_close_confirmation = "NeverPrompt"
