@@ -36,10 +36,10 @@
                         "manipulators": [
                             {
                                 "from": {
-                                    "key_code": "t",
+                                    "key_code": "return_or_enter",
                                     "modifiers": { "mandatory": ["left_command", "left_control"] }
                                 },
-                                "to": [{ "shell_command": "open -na /Applications/WezTerm.app" }],
+                                "to": [{ "shell_command": "open -na /Applications/Ghostty.app" }],
                                 "type": "basic"
                             },
                             {
@@ -47,7 +47,7 @@
                                     "key_code": "b",
                                     "modifiers": { "mandatory": ["left_command", "left_control"] }
                                 },
-                                "to": [{ "shell_command": "open \"/Applications/Arc.app\"" }],
+                                "to": [{ "shell_command": "open \"/Applications/Zen.app\"" }],
                                 "type": "basic"
                             },
                             {
