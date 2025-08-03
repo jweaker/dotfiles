@@ -3,6 +3,6 @@ font-size=16
 background-opacity=0.9
 background-blur=true
 background="#000000"
-window-padding-color=extend
+window-padding-y=0
 theme=catppuccin-mocha
 macos-titlebar-style=tabs
