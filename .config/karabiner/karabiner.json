@@ -33,6 +33,7 @@
                     },
                     {
                         "description": "Custom shortcuts from skhd",
+                        "enabled": false,
                         "manipulators": [
                             {
                                 "from": {
