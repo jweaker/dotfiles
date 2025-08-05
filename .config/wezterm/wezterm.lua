@@ -33,10 +33,19 @@ wezterm.on("update-right-status", function(window, pane)
 	local tab_count = #mux_window:tabs()
 
 	local dims = window:get_dimensions()
-	local isnt_maximized = dims.pixel_height and dims.pixel_height < 1900
+	local is_maximized = dims.pixel_height and dims.pixel_height > 1900
 
-	if (has_tmux or tab_count > 1) and isnt_maximized then
-		-- Reduced paddin when tmux is active
+	if is_maximized and tab_count < 2 then
+		-- Normal padding when tmux is not active
+		window:set_config_overrides({
+			window_padding = {
+				left = 3,
+				right = 0,
+				top = 32,
+				bottom = 0,
+			},
+		})
+	elseif has_tmux or tab_count > 1 then
 		window:set_config_overrides({
 			window_padding = {
 				left = 3,
