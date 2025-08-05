@@ -5,42 +5,14 @@
             "complex_modifications": {
                 "rules": [
                     {
-                        "description": "Switch Caps Lock and Escape. Make Caps Lock act as Control when held, Escape when pressed alone.",
-                        "manipulators": [
-                            {
-                                "from": {
-                                    "key_code": "caps_lock",
-                                    "modifiers": { "optional": ["any"] }
-                                },
-                                "to": [
-                                    {
-                                        "key_code": "left_control",
-                                        "lazy": true
-                                    }
-                                ],
-                                "to_if_alone": [{ "key_code": "escape" }],
-                                "type": "basic"
-                            },
-                            {
-                                "from": {
-                                    "key_code": "escape",
-                                    "modifiers": { "optional": ["any"] }
-                                },
-                                "to": [{ "key_code": "caps_lock" }],
-                                "type": "basic"
-                            }
-                        ]
-                    },
-                    {
                         "description": "Custom shortcuts from skhd",
-                        "enabled": false,
                         "manipulators": [
                             {
                                 "from": {
                                     "key_code": "return_or_enter",
                                     "modifiers": { "mandatory": ["left_command", "left_control"] }
                                 },
-                                "to": [{ "shell_command": "open -na /Applications/Ghostty.app" }],
+                                "to": [{ "shell_command": "open -na /Applications/Wezterm.app" }],
                                 "type": "basic"
                             },
                             {
@@ -78,6 +50,33 @@
                                         "modifiers": ["option"]
                                     }
                                 ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Switch Caps Lock and Escape. Make Caps Lock act as Control when held, Escape when pressed alone.",
+                        "manipulators": [
+                            {
+                                "from": {
+                                    "key_code": "caps_lock",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "left_control",
+                                        "lazy": true
+                                    }
+                                ],
+                                "to_if_alone": [{ "key_code": "escape" }],
+                                "type": "basic"
+                            },
+                            {
+                                "from": {
+                                    "key_code": "escape",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "key_code": "caps_lock" }],
                                 "type": "basic"
                             }
                         ]
