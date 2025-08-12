@@ -230,3 +230,5 @@ export PATH="/opt/homebrew/opt/icu4c@74/sbin:$PATH"
 
 # opencode
 export PATH=/Users/jweaker/.opencode/bin:$PATH
+
+[[ -f ~/.zsh_private ]] && source ~/.zsh_private

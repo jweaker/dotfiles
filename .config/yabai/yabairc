@@ -40,6 +40,10 @@ yabai -m config                                 \
 # borders active_color=0x50ceffce inactive_color=0x00000000 width=1.0 &
 
 # rules
+yabai -m rule --add app="^Telegram$" space=8
+yabai -m rule --add app="^Spotify$" space=9
+yabai -m rule --add app="^Electron$" space=3
+
 yabai -m rule --add app="^Calculator$" manage=off
 yabai -m rule --add app="^System Settings$" manage=off
 yabai -m rule --add app="^Clock$" manage=off
