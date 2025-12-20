@@ -4,10 +4,14 @@
 
 (defsrc
     esc  
-    caps 
+    caps
 )
 
-(deflayermap (base)
-    esc caps     
-    caps (tap-hold-press 200 200 esc lctl) 
+(deflayer base
+    caps
+    @escctrl
+)
+
+(defalias
+    escctrl (tap-hold-press 150 180 esc lctl)
 )

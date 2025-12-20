@@ -216,7 +216,6 @@ eval "$(zoxide init --cmd cd zsh)"
 
 export PATH="$HOME/.pyenv/bin:$PATH"
  
-eval "$(pyenv init -)"
 
 setopt COMBINING_CHARS
 export PATH="/opt/homebrew/opt/icu4c@76/bin:$PATH"
