@@ -216,7 +216,6 @@ eval "$(zoxide init --cmd cd zsh)"
 
 export PATH="$HOME/.pyenv/bin:$PATH"
  
-eval "$(pyenv init -)"
 
 setopt COMBINING_CHARS
 export PATH="/opt/homebrew/opt/icu4c@76/bin:$PATH"
@@ -233,16 +232,29 @@ export PATH=/Users/jweaker/.opencode/bin:$PATH
 
 [[ -f ~/.zsh_private ]] && source ~/.zsh_private
 
-# fnm
-FNM_PATH="/opt/homebrew/opt/fnm/bin"
-if [ -d "$FNM_PATH" ]; then
-  eval "`fnm env`"
+# --- Node & Package Manager Config (OS-Aware) ---
+if [[ "$(uname)" == "Darwin" ]]; then
+    # macOS Configuration (fnm)
+    FNM_PATH="/opt/homebrew/opt/fnm/bin"
+    if [ -d "$FNM_PATH" ]; then
+      eval "`fnm env`"
+    fi
+    export PNPM_HOME="$HOME/Library/pnpm"
+else
+    # Linux Configuration (nvm)
+    export NVM_DIR="$HOME/.config/nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+    export PNPM_HOME="$HOME/.local/share/pnpm"
 fi
 
-# pnpm
-export PNPM_HOME="/Users/jweaker/Library/pnpm"
+# Add pnpm to PATH (Shared)
 case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
-# pnpm end
+
+# Load local secrets if existing (Shared)
+if [ -f "$HOME/.local_secrets" ]; then
+    source "$HOME/.local_secrets"
+fi
