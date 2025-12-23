@@ -232,3 +232,17 @@ export PATH="/opt/homebrew/opt/icu4c@74/sbin:$PATH"
 export PATH=/Users/jweaker/.opencode/bin:$PATH
 
 [[ -f ~/.zsh_private ]] && source ~/.zsh_private
+
+# fnm
+FNM_PATH="/opt/homebrew/opt/fnm/bin"
+if [ -d "$FNM_PATH" ]; then
+  eval "`fnm env`"
+fi
+
+# pnpm
+export PNPM_HOME="/Users/jweaker/Library/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end
