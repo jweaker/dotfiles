@@ -1,0 +1,435 @@
+#!/usr/bin/env bash
+
+set -e
+
+# Configuration
+OPENCODE_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/opencode"
+AUTH_FILE="$OPENCODE_DIR/auth.json"
+
+# Ensure the directory exists
+mkdir -p "$OPENCODE_DIR"
+
+# Helper function to get profile path
+get_profile_path() {
+    local name="$1"
+    echo "$OPENCODE_DIR/auth-${name}.json"
+}
+
+# Helper function to check if current auth.json matches a profile
+is_current_profile() {
+    local profile_path="$1"
+    
+    if [[ ! -f "$AUTH_FILE" ]] || [[ ! -f "$profile_path" ]]; then
+        return 1
+    fi
+    
+    # Compare files using cmp (returns 0 if identical)
+    cmp -s "$AUTH_FILE" "$profile_path"
+}
+
+# Helper function to get budget info from GitHub Copilot API
+get_budget_info() {
+    local token="$1"
+    
+    if [[ -z "$token" ]]; then
+        echo ""
+        return
+    fi
+    
+    # Call GitHub Copilot internal API to get quota info
+    local response
+    response=$(curl -s -H "Authorization: token $token" \
+                     -H "Accept: application/json" \
+                     "https://api.github.com/copilot_internal/user" 2>/dev/null || echo "")
+    
+    if [[ -z "$response" ]]; then
+        echo ""
+        return
+    fi
+    
+    # Extract premium_interactions quota info and reset date using jq
+    local entitlement remaining quota_reset_date
+    entitlement=$(echo "$response" | jq -r '.quota_snapshots.premium_interactions.entitlement // empty' 2>/dev/null || echo "")
+    remaining=$(echo "$response" | jq -r '.quota_snapshots.premium_interactions.remaining // empty' 2>/dev/null || echo "")
+    quota_reset_date=$(echo "$response" | jq -r '.quota_reset_date // empty' 2>/dev/null || echo "")
+    
+    if [[ -z "$entitlement" ]] || [[ -z "$remaining" ]]; then
+        echo ""
+        return
+    fi
+    
+    local used=$((entitlement - remaining))
+    
+    # Create progress bar
+    local bar_width=20
+    local percentage=0
+    
+    if [[ $entitlement -gt 0 ]]; then
+        percentage=$(awk "BEGIN {printf \"%.0f\", ($used / $entitlement) * 100}")
+    fi
+    
+    local filled=$((percentage * bar_width / 100))
+    
+    # Handle overflow (over 100%)
+    if [[ $filled -gt $bar_width ]]; then
+        filled=$bar_width
+    fi
+    if [[ $filled -lt 0 ]]; then
+        filled=0
+    fi
+    
+    # Determine color based on percentage
+    local color=""
+    if [[ $percentage -ge 80 ]]; then
+        color="\033[0;31m"  # Red for high usage (>=80%)
+    elif [[ $percentage -ge 50 ]]; then
+        color="\033[0;33m"  # Yellow for medium usage (50-79%)
+    else
+        color="\033[0;32m"  # Green for low usage (<50%)
+    fi
+    local reset="\033[0m"
+    
+    local bar=""
+    for ((i=0; i<filled; i++)); do
+        bar+="█"
+    done
+    for ((i=filled; i<bar_width; i++)); do
+        bar+="░"
+    done
+    
+    # Calculate days until reset and format date
+    local days_until_reset=""
+    if [[ -n "$quota_reset_date" ]]; then
+        local reset_epoch
+        reset_epoch=$(date -d "$quota_reset_date" +%s 2>/dev/null || echo "0")
+        if [[ $reset_epoch -gt 0 ]]; then
+            local now_epoch
+            now_epoch=$(date +%s)
+            local seconds_diff=$((reset_epoch - now_epoch))
+            local days_diff=$((seconds_diff / 86400))
+            
+            # Format date as "Mon Day" (e.g., "Feb 1")
+            local formatted_date
+            formatted_date=$(date -d "$quota_reset_date" "+%b %-d" 2>/dev/null || echo "")
+            
+            if [[ $days_diff -ge 0 ]] && [[ -n "$formatted_date" ]]; then
+                days_until_reset=" (${formatted_date}, ${days_diff}d)"
+            fi
+        fi
+    fi
+    
+    # Show overflow indicator if used > entitlement
+    if [[ $used -gt $entitlement ]]; then
+        echo "${color} [${bar}] ${used}/${entitlement} (OVER!)${days_until_reset}${reset}|${used}|${entitlement}|${quota_reset_date}"
+    else
+        echo "${color} [${bar}] ${used}/${entitlement}${days_until_reset}${reset}|${used}|${entitlement}|${quota_reset_date}"
+    fi
+}
+
+# Helper function to extract GitHub token from auth file
+extract_github_token() {
+    local auth_file="$1"
+    
+    if [[ ! -f "$auth_file" ]]; then
+        echo ""
+        return
+    fi
+    
+    # Extract github-copilot access token using jq
+    jq -r '."github-copilot".access // empty' "$auth_file" 2>/dev/null
+}
+
+# Command: switch
+cmd_switch() {
+    local name="$1"
+    local profile_path
+    profile_path=$(get_profile_path "$name")
+    
+    if [[ ! -f "$profile_path" ]]; then
+        echo "Error: Profile '$name' does not exist" >&2
+        exit 1
+    fi
+    
+    cp "$profile_path" "$AUTH_FILE"
+    echo "Switched to profile: $name"
+}
+
+# Command: clear
+cmd_clear() {
+    echo "{}" > "$AUTH_FILE"
+    echo "Cleared auth.json"
+}
+
+# Command: set
+cmd_set() {
+    local name="$1"
+    local profile_path
+    profile_path=$(get_profile_path "$name")
+    
+    if [[ ! -f "$AUTH_FILE" ]]; then
+        echo "Error: auth.json does not exist" >&2
+        exit 1
+    fi
+    
+    cp "$AUTH_FILE" "$profile_path"
+    echo "Saved current auth.json as profile: $name"
+}
+
+# Command: delete
+cmd_delete() {
+    local name="$1"
+    local profile_path
+    profile_path=$(get_profile_path "$name")
+    
+    if [[ ! -f "$profile_path" ]]; then
+        echo "Error: Profile '$name' does not exist" >&2
+        exit 1
+    fi
+    
+    rm "$profile_path"
+    echo "Deleted profile: $name"
+}
+
+# Command: list
+cmd_list() {
+    echo "Available profiles:"
+    echo ""
+    
+    local found=0
+    local -a profiles=()
+    local -a budget_displays=()
+    local -a budget_used=()
+    local -a budget_entitlement=()
+    local -a budget_reset_dates=()
+    local -a is_active=()
+    local max_name_len=0
+    local total_used=0
+    local total_entitlement=0
+    local earliest_reset_date=""
+    local earliest_reset_epoch=0
+    
+    # First pass: collect all data
+    while IFS= read -r -d '' profile_path; do
+        found=1
+        local filename
+        filename=$(basename "$profile_path")
+        local name="${filename#auth-}"
+        name="${name%.json}"
+        
+        # Track max name length
+        if [[ ${#name} -gt $max_name_len ]]; then
+            max_name_len=${#name}
+        fi
+        
+        # Get budget info for this profile
+        local token
+        token=$(extract_github_token "$profile_path")
+        local budget_info
+        budget_info=$(get_budget_info "$token")
+        
+        # Parse budget info (format: "display|used|entitlement|reset_date")
+        local display_part=""
+        local used=0
+        local entitlement=0
+        local reset_date=""
+        
+        if [[ -n "$budget_info" ]]; then
+            display_part=$(echo "$budget_info" | cut -d'|' -f1)
+            used=$(echo "$budget_info" | cut -d'|' -f2)
+            entitlement=$(echo "$budget_info" | cut -d'|' -f3)
+            reset_date=$(echo "$budget_info" | cut -d'|' -f4)
+            
+            # Add to totals (treat negative as 0)
+            if [[ $used -ge $entitlment ]]; then
+                total_used=$((total_used + $entitlement))
+            fi
+            if [[ $entitlement -ge 0 ]]; then
+                total_entitlement=$((total_entitlement + entitlement))
+            fi
+            
+            # Track earliest reset date
+            if [[ -n "$reset_date" ]]; then
+                local reset_epoch
+                reset_epoch=$(date -d "$reset_date" +%s 2>/dev/null || echo "0")
+                if [[ $reset_epoch -gt 0 ]]; then
+                    if [[ $earliest_reset_epoch -eq 0 ]] || [[ $reset_epoch -lt $earliest_reset_epoch ]]; then
+                        earliest_reset_epoch=$reset_epoch
+                        earliest_reset_date=$reset_date
+                    fi
+                fi
+            fi
+        fi
+        
+        # Check if this is the current profile
+        if is_current_profile "$profile_path"; then
+            is_active+=("1")
+        else
+            is_active+=("0")
+        fi
+        
+        profiles+=("$name")
+        budget_displays+=("$display_part")
+        budget_used+=("$used")
+        budget_entitlement+=("$entitlement")
+        budget_reset_dates+=("$reset_date")
+    done < <(find "$OPENCODE_DIR" -maxdepth 1 -name "auth-*.json" -print0 | sort -z)
+    
+    # Calculate fixed width for name column (including prefix and suffix)
+    # "  * " = 4 chars, " (active)" = 9 chars, or "    " = 4 chars + 8 spaces
+    local name_col_width=$((max_name_len + 13))  # 4 + max_name + 9 for active profiles
+    
+    # Second pass: display with alignment
+    for i in "${!profiles[@]}"; do
+        local name="${profiles[$i]}"
+        local budget_display="${budget_displays[$i]}"
+        local active="${is_active[$i]}"
+        
+        # Format name with padding and color
+        local cyan="\033[0;36m"
+        local reset="\033[0m"
+        local name_display
+        
+        if [[ $active -eq 1 ]]; then
+            # "  * name (active)"
+            local prefix="  ${cyan}*${reset} "
+            local suffix=" ${cyan}(active)${reset}"
+            local content="${name}"
+            # Calculate padding needed
+            local content_len=$((4 + ${#name} + 9))  # length without color codes
+            local padding=$((name_col_width - content_len))
+            name_display="${prefix}${content}${suffix}$(printf '%*s' $padding '')"
+        else
+            # "    name        "
+            local prefix="    "
+            local content="${name}"
+            local content_len=$((4 + ${#name}))
+            local padding=$((name_col_width - content_len))
+            name_display="${prefix}${content}$(printf '%*s' $padding '')"
+        fi
+        
+        echo -e "${name_display}${budget_display}"
+    done
+    
+    # Display total quota if we have any profiles with quota data
+    if [[ $total_entitlement -gt 0 ]]; then
+        # Calculate total percentage
+        local total_percentage=0
+        if [[ $total_entitlement -gt 0 ]]; then
+            total_percentage=$(awk "BEGIN {printf \"%.0f\", ($total_used / $total_entitlement) * 100}")
+        fi
+        
+        # Create total bar
+        local bar_width=20
+        local filled=$((total_percentage * bar_width / 100))
+        if [[ $filled -gt $bar_width ]]; then
+            filled=$bar_width
+        fi
+        if [[ $filled -lt 0 ]]; then
+            filled=0
+        fi
+        
+        # Determine color for total
+        local color=""
+        if [[ $total_percentage -ge 80 ]]; then
+            color="\033[0;31m"  # Red
+        elif [[ $total_percentage -ge 50 ]]; then
+            color="\033[0;33m"  # Yellow
+        else
+            color="\033[0;32m"  # Green
+        fi
+        local reset="\033[0m"
+        
+        local total_bar=""
+        for ((i=0; i<filled; i++)); do
+            total_bar+="█"
+        done
+        for ((i=filled; i<bar_width; i++)); do
+            total_bar+="░"
+        done
+        
+        # Calculate days until earliest reset and format date
+        local days_info=""
+        if [[ -n "$earliest_reset_date" ]] && [[ $earliest_reset_epoch -gt 0 ]]; then
+            local now_epoch
+            now_epoch=$(date +%s)
+            local seconds_diff=$((earliest_reset_epoch - now_epoch))
+            local days_diff=$((seconds_diff / 86400))
+            
+            # Format date as "Mon Day" (e.g., "Feb 1")
+            local formatted_date
+            formatted_date=$(date -d "$earliest_reset_date" "+%b %-d" 2>/dev/null || echo "")
+            
+            if [[ $days_diff -ge 0 ]] && [[ -n "$formatted_date" ]]; then
+                days_info=" (${formatted_date}, ${days_diff}d)"
+            fi
+        fi
+        
+        # Format TOTAL line with same alignment
+        local prefix="\n    "
+        local content="TOTAL"
+        local content_len=$((4 + ${#content}))
+        local padding=$((name_col_width - content_len))
+        local total_display="${prefix}${content}$(printf '%*s' $padding '')"
+        
+        echo -e "${total_display}${color} [${total_bar}] ${total_used}/${total_entitlement}${days_info}${reset}"
+    fi
+    
+    if [[ $found -eq 0 ]]; then
+        echo "  No profiles found"
+    fi
+}
+
+# Main command dispatcher
+main() {
+    if [[ $# -eq 0 ]]; then
+        echo "Usage: openswitch <command> [args]"
+        echo ""
+        echo "Commands:"
+        echo "  switch <name>   Switch to profile <name>"
+        echo "  clear           Clear auth.json (set to {})"
+        echo "  set <name>      Save current auth.json as profile <name>"
+        echo "  delete <name>   Delete profile <name>"
+        echo "  list            List all available profiles"
+        exit 1
+    fi
+    
+    local command="$1"
+    shift
+    
+    case "$command" in
+        switch)
+            if [[ $# -ne 1 ]]; then
+                echo "Error: 'switch' requires a profile name" >&2
+                exit 1
+            fi
+            cmd_switch "$1"
+            ;;
+        clear)
+            cmd_clear
+            ;;
+        set)
+            if [[ $# -ne 1 ]]; then
+                echo "Error: 'set' requires a profile name" >&2
+                exit 1
+            fi
+            cmd_set "$1"
+            ;;
+        delete)
+            if [[ $# -ne 1 ]]; then
+                echo "Error: 'delete' requires a profile name" >&2
+                exit 1
+            fi
+            cmd_delete "$1"
+            ;;
+        list)
+            cmd_list
+            ;;
+        *)
+            echo "Error: Unknown command '$command'" >&2
+            echo "Run 'openswitch' without arguments for usage" >&2
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"
