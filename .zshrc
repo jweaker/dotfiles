@@ -56,22 +56,6 @@ if [[ ! -f $ZSH/plugins/omz/sudo.plugin.zsh ]]; then
 fi
 
 
-if [[ $(uname) != "Darwin" ]]; then
-    if [[ -z "$(fc-list 'JetBrainsMono Nerd Font')" ]]; then
-        mkdir -p ~/.local/
-        mkdir -p ~/.local/share/
-        mkdir -p ~/.local/share/fonts/
-        mkdir -p ~/.local/share/fonts/jetbrains/
-        cd ~/.local/share/fonts/jetbrains/
-        curl -OL 'https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/JetBrainsMono.tar.xz'
-        xz -d JetBrainsMono.tar.xz
-        tar -xf JetBrainsMono.tar
-        rm JetBrainsMono.tar
-        cd
-    fi
-fi
-
-
 source $ZSH/plugins/fzf-tab/fzf-tab.plugin.zsh
 source $ZSH/plugins/zsh-autosuggestions/zsh-autosuggestions.plugin.zsh
 source $ZSH/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
