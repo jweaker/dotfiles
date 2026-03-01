@@ -412,7 +412,7 @@ cmd_list_profile() {
     local count=${#providers[@]}
     local i=0
     for provider in "${providers[@]}"; do
-        ((i++))
+        i=$((i + 1))
         local is_last=0
         ((i == count)) && is_last=1
         
@@ -474,7 +474,7 @@ cmd_list_all() {
         local count=${#providers[@]}
         local i=0
         for provider in "${providers[@]}"; do
-            ((i++))
+            i=$((i + 1))
             local is_last=0
             ((i == count)) && is_last=1
             
