@@ -427,13 +427,44 @@ cmd_list_profile() {
 cmd_list_all() {
     print_header "Profiles"
 
-    local found=0
     local total_used=0 total_entitlement=0
     local earliest_reset_date="" earliest_reset_epoch=0
 
-    # Process each profile
+    # Collect all profile paths first
+    local -a profile_paths=()
     while IFS= read -r -d '' profile_path; do
-        found=1
+        profile_paths+=("$profile_path")
+    done < <(find "$OPENCODE_DIR" -maxdepth 1 -name "auth-*.json" -print0 2>/dev/null | sort -z)
+
+    if ((${#profile_paths[@]} == 0)); then
+        echo -e "  ${DIM}No profiles found${RESET}"
+        echo -e "\n  ${DIM}Create one with:${RESET} openswitch set <name>"
+        return
+    fi
+
+    # Fire all GitHub API requests in parallel, keyed by profile path
+    local tmp_dir
+    tmp_dir=$(mktemp -d)
+    trap 'rm -rf "$tmp_dir"' RETURN
+
+    for profile_path in "${profile_paths[@]}"; do
+        local token
+        token=$(jq -r '."github-copilot".access // empty' "$profile_path" 2>/dev/null)
+        if [[ -n "$token" ]]; then
+            local safe_key
+            safe_key=$(echo "$profile_path" | tr '/' '_')
+            (
+                result=$(get_budget_info "$token")
+                echo "$result" > "$tmp_dir/$safe_key"
+            ) &
+        fi
+    done
+
+    # Wait for all background requests to finish
+    wait
+
+    # Now render all profiles using cached results
+    for profile_path in "${profile_paths[@]}"; do
         local filename name
         filename=$(basename "$profile_path")
         name="${filename#auth-}"
@@ -480,48 +511,73 @@ cmd_list_all() {
             
             local prefix="  $SYM_PROVIDER"
             ((is_last)) && prefix="  $SYM_PROVIDER_LAST"
-            
-            format_provider_line "$provider" "$profile_path" "$prefix" 1
-            
-            # Aggregate budget totals for github-copilot
-            if [[ "$provider" == "github-copilot" ]]; then
-                local token budget_info
-                token=$(jq -r --arg p "$provider" '.[$p].access // empty' "$profile_path" 2>/dev/null)
-                if [[ -n "$token" ]]; then
-                    budget_info=$(get_budget_info "$token")
-                    if [[ -n "$budget_info" ]]; then
-                        local used entitlement reset_date
-                        IFS='|' read -r _ used entitlement reset_date <<< "$budget_info"
-                        
-                        if ((used >= entitlement)); then
-                            total_used=$((total_used + entitlement))
-                        else
-                            total_used=$((total_used + used))
-                        fi
-                        ((entitlement >= 0)) && total_entitlement=$((total_entitlement + entitlement))
 
-                        if [[ -n "$reset_date" ]]; then
-                            local reset_epoch
-                            reset_epoch=$(date_to_epoch "$reset_date") || reset_epoch=0
-                            if ((reset_epoch > 0)); then
-                                if ((earliest_reset_epoch == 0 || reset_epoch < earliest_reset_epoch)); then
-                                    earliest_reset_epoch=$reset_epoch
-                                    earliest_reset_date=$reset_date
-                                fi
+            # For github-copilot, inject cached budget info instead of re-fetching
+            if [[ "$provider" == "github-copilot" ]]; then
+                local safe_key budget_info=""
+                safe_key=$(echo "$profile_path" | tr '/' '_')
+                [[ -f "$tmp_dir/$safe_key" ]] && budget_info=$(cat "$tmp_dir/$safe_key")
+
+                # Render provider line manually with cached budget
+                local active_marker=""
+                is_provider_active "$provider" "$profile_path" && active_marker=" ${GREEN}${SYM_ACTIVE}${RESET}"
+
+                local provider_data type expires
+                provider_data=$(jq -c --arg p "$provider" '.[$p]' "$profile_path" 2>/dev/null)
+                type=$(echo "$provider_data" | jq -r '.type // "unknown"' 2>/dev/null)
+                expires=$(echo "$provider_data" | jq -r '.expires // 0' 2>/dev/null)
+
+                local info="${DIM}${type}${RESET}"
+
+                if [[ "$expires" != "0" ]] && [[ "$expires" != "null" ]]; then
+                    local now_ms=$(($(date +%s) * 1000))
+                    if ((expires < now_ms)); then
+                        info+=" ${RED}expired${RESET}"
+                    else
+                        local expires_sec=$((expires / 1000))
+                        local expires_date
+                        expires_date=$(epoch_to_display "$expires_sec") || expires_date=""
+                        [[ -n "$expires_date" ]] && info+=" ${DIM}expires ${expires_date}${RESET}"
+                    fi
+                fi
+
+                if [[ -n "$budget_info" ]]; then
+                    local display_part
+                    display_part=$(echo "$budget_info" | cut -d'|' -f1)
+                    info+=" $display_part"
+                fi
+
+                echo -e "  ${DIM}${prefix}${RESET} ${CYAN}${provider}${RESET}${active_marker}  ${info}"
+
+                # Aggregate budget totals
+                if [[ -n "$budget_info" ]]; then
+                    local used entitlement reset_date
+                    IFS='|' read -r _ used entitlement reset_date <<< "$budget_info"
+
+                    if ((used >= entitlement)); then
+                        total_used=$((total_used + entitlement))
+                    else
+                        total_used=$((total_used + used))
+                    fi
+                    ((entitlement >= 0)) && total_entitlement=$((total_entitlement + entitlement))
+
+                    if [[ -n "$reset_date" ]]; then
+                        local reset_epoch
+                        reset_epoch=$(date_to_epoch "$reset_date") || reset_epoch=0
+                        if ((reset_epoch > 0)); then
+                            if ((earliest_reset_epoch == 0 || reset_epoch < earliest_reset_epoch)); then
+                                earliest_reset_epoch=$reset_epoch
+                                earliest_reset_date=$reset_date
                             fi
                         fi
                     fi
                 fi
+            else
+                format_provider_line "$provider" "$profile_path" "$prefix" 1
             fi
         done
         echo ""
-    done < <(find "$OPENCODE_DIR" -maxdepth 1 -name "auth-*.json" -print0 2>/dev/null | sort -z)
-
-    if ((found == 0)); then
-        echo -e "  ${DIM}No profiles found${RESET}"
-        echo -e "\n  ${DIM}Create one with:${RESET} openswitch set <name>"
-        return
-    fi
+    done
 
     # Total bar
     if ((total_entitlement > 0)); then
