@@ -242,3 +242,6 @@ esac
 if [ -f "$HOME/.local_secrets" ]; then
     source "$HOME/.local_secrets"
 fi
+
+# opencode
+export PATH=/home/jweaker/.opencode/bin:$PATH

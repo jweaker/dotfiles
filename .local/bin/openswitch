@@ -88,6 +88,38 @@ extract_github_token() {
 }
 
 #=============================================================================
+# Cross-platform date helpers
+#=============================================================================
+
+# Convert a date string (ISO 8601 / RFC 3339) to a unix epoch integer
+date_to_epoch() {
+    local datestr="$1"
+    if date -d "$datestr" +%s &>/dev/null 2>&1; then
+        # GNU coreutils (Linux)
+        date -d "$datestr" +%s
+    else
+        # BSD/macOS — try multiple format strings
+        local fmt result
+        for fmt in "%Y-%m-%dT%H:%M:%SZ" "%Y-%m-%dT%H:%M:%S+00:00" "%Y-%m-%d"; do
+            result=$(date -jf "$fmt" "$datestr" +%s 2>/dev/null) && echo "$result" && return
+        done
+        return 1
+    fi
+}
+
+# Convert a unix epoch to a display date string like "Mar 5"
+epoch_to_display() {
+    local epoch="$1"
+    if date -d "@$epoch" "+%b %-d" &>/dev/null 2>&1; then
+        # GNU coreutils (Linux)
+        date -d "@$epoch" "+%b %-d"
+    else
+        # BSD/macOS
+        date -r "$epoch" "+%b %-d" 2>/dev/null
+    fi
+}
+
+#=============================================================================
 # Output Formatting
 #=============================================================================
 
@@ -151,12 +183,12 @@ get_budget_info() {
     local days_info=""
     if [[ -n "$quota_reset_date" ]]; then
         local reset_epoch now_epoch
-        reset_epoch=$(date -d "$quota_reset_date" +%s 2>/dev/null) || reset_epoch=0
+        reset_epoch=$(date_to_epoch "$quota_reset_date") || reset_epoch=0
         if ((reset_epoch > 0)); then
             now_epoch=$(date +%s)
             local days_diff=$(( (reset_epoch - now_epoch) / 86400 ))
             local formatted_date
-            formatted_date=$(date -d "$quota_reset_date" "+%b %-d" 2>/dev/null) || formatted_date=""
+            formatted_date=$(epoch_to_display "$reset_epoch") || formatted_date=""
             ((days_diff >= 0)) && [[ -n "$formatted_date" ]] && days_info=" ${DIM}resets ${formatted_date}${RESET}"
         fi
     fi
@@ -297,7 +329,7 @@ format_provider_line() {
         else
             local expires_sec=$((expires / 1000))
             local expires_date
-            expires_date=$(date -d "@$expires_sec" "+%b %-d" 2>/dev/null) || expires_date=""
+            expires_date=$(epoch_to_display "$expires_sec") || expires_date=""
             [[ -n "$expires_date" ]] && info+=" ${DIM}expires ${expires_date}${RESET}"
         fi
     fi
@@ -470,7 +502,7 @@ cmd_list_all() {
 
                         if [[ -n "$reset_date" ]]; then
                             local reset_epoch
-                            reset_epoch=$(date -d "$reset_date" +%s 2>/dev/null) || reset_epoch=0
+                            reset_epoch=$(date_to_epoch "$reset_date") || reset_epoch=0
                             if ((reset_epoch > 0)); then
                                 if ((earliest_reset_epoch == 0 || reset_epoch < earliest_reset_epoch)); then
                                     earliest_reset_epoch=$reset_epoch
@@ -518,7 +550,7 @@ cmd_list_all() {
             local now_epoch days_diff formatted_date
             now_epoch=$(date +%s)
             days_diff=$(( (earliest_reset_epoch - now_epoch) / 86400 ))
-            formatted_date=$(date -d "$earliest_reset_date" "+%b %-d" 2>/dev/null) || formatted_date=""
+            formatted_date=$(epoch_to_display "$earliest_reset_epoch") || formatted_date=""
             ((days_diff >= 0)) && [[ -n "$formatted_date" ]] && days_info=" ${DIM}resets ${formatted_date}${RESET}"
         fi
 
