@@ -4,6 +4,7 @@ set -e
 
 # Configuration
 readonly OPENCODE_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/opencode"
+readonly PROFILE_DIR="$HOME/.openswitch"
 readonly AUTH_FILE="$OPENCODE_DIR/auth.json"
 
 # Colors
@@ -23,15 +24,16 @@ readonly SYM_CHECK="✓"
 readonly SYM_PROVIDER="├──"
 readonly SYM_PROVIDER_LAST="└──"
 
-# Ensure the directory exists
+# Ensure the directories exist
 mkdir -p "$OPENCODE_DIR"
+mkdir -p "$PROFILE_DIR"
 
 #=============================================================================
 # Utility Functions
 #=============================================================================
 
 get_profile_path() {
-    echo "$OPENCODE_DIR/auth-${1}.json"
+    echo "$PROFILE_DIR/auth-${1}.json"
 }
 
 profile_exists() {
@@ -434,7 +436,7 @@ cmd_list_all() {
     local -a profile_paths=()
     while IFS= read -r -d '' profile_path; do
         profile_paths+=("$profile_path")
-    done < <(find "$OPENCODE_DIR" -maxdepth 1 -name "auth-*.json" -print0 2>/dev/null | sort -z)
+    done < <(find "$PROFILE_DIR" -maxdepth 1 -name "auth-*.json" -print0 2>/dev/null | sort -z)
 
     if ((${#profile_paths[@]} == 0)); then
         echo -e "  ${DIM}No profiles found${RESET}"
