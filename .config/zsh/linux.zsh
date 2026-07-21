@@ -12,3 +12,8 @@ fi
 if (( $+commands[mise] )); then
   eval "$(mise activate zsh)"
 fi
+
+# Keep personal wrappers ahead of version-manager shims after mise rewrites
+# PATH. This is used by the account-aware Codex launcher on remote hosts.
+path=("$HOME/.local/bin" ${path:#$HOME/.local/bin})
+export PATH

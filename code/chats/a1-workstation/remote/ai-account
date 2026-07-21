@@ -1,0 +1,212 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export PATH="${HOME}/.local/bin:${HOME}/.local/share/mise/shims:/usr/local/bin:/usr/bin:/bin"
+
+root="${HOME}/.local/share/ai-accounts"
+state="${root}/state"
+legacy_pending="${root}/pending"
+mkdir -p "$root" "$state" "$root/codex" "$root/claude"
+chmod 700 "$root" "$state" "$root/codex" "$root/claude"
+
+usage() {
+  cat <<'EOF'
+usage: ai-account login <codex|claude> <label>
+       ai-account capture <codex|claude> <label>
+       ai-account import-stdin <codex|claude> <label>
+       ai-account use <codex|claude> <label>
+       ai-account request <codex|claude> <label>
+       ai-account run codex <label> [codex arguments...]
+       ai-account current [codex|claude]
+       ai-account list [codex|claude]
+
+Codex profiles use isolated CODEX_HOME directories. Selecting a Codex profile
+changes the default for new processes immediately; existing sessions continue
+with the credentials they started with. Claude still requires its active
+processes to close before replacing its global credential file.
+EOF
+}
+
+valid_provider() { [[ "$1" == codex || "$1" == claude ]]; }
+valid_label() { [[ "$1" =~ ^[0-9A-Za-z][0-9A-Za-z._-]{0,63}$ ]]; }
+
+source_file() {
+  case "$1" in
+    codex) printf '%s/.codex/auth.json' "$HOME" ;;
+    claude) printf '%s/.claude/.credentials.json' "$HOME" ;;
+  esac
+}
+
+profile_file() {
+  case "$1" in
+    codex) printf '%s/codex/%s/auth.json' "$root" "$2" ;;
+    claude) printf '%s/claude/%s/credentials.json' "$root" "$2" ;;
+  esac
+}
+
+provider_busy() {
+  case "$1" in
+    claude) pgrep -u "$(id -u)" -x claude >/dev/null 2>&1 ;;
+    codex) return 1 ;;
+  esac
+}
+
+write_state() {
+  local provider="$1" label="$2" now temporary
+  now="$(date +%s)"
+  temporary="${state}/${provider}.tmp.$$"
+  printf '%s\n%s\n' "$label" "$now" >"$temporary"
+  chmod 600 "$temporary"
+  mv -f -- "$temporary" "${state}/${provider}"
+}
+
+capture() {
+  local provider="$1" label="$2" source destination
+  valid_provider "$provider" && valid_label "$label" || { usage; exit 2; }
+  source="$(source_file "$provider")"
+  destination="$(profile_file "$provider" "$label")"
+  [[ -s "$source" ]] || { printf 'No %s login was found at %s.\n' "$provider" "$source" >&2; exit 1; }
+  mkdir -p "$(dirname "$destination")"
+  chmod 700 "$(dirname "$destination")"
+  install -m 600 "$source" "${destination}.tmp.$$"
+  mv -f -- "${destination}.tmp.$$" "$destination"
+  write_state "$provider" "$label"
+  printf 'Saved and selected %s profile %s.\n' "$provider" "$label"
+}
+
+import_stdin() {
+  local provider="$1" label="$2" destination temporary
+  valid_provider "$provider" && valid_label "$label" || { usage; exit 2; }
+  destination="$(profile_file "$provider" "$label")"
+  mkdir -p "$(dirname "$destination")"
+  chmod 700 "$(dirname "$destination")"
+  temporary="${destination}.tmp.$$"
+  umask 077
+  dd of="$temporary" status=none
+  python3 - "$provider" "$temporary" <<'PY'
+import json
+import os
+import sys
+
+provider, path = sys.argv[1:]
+with open(path, encoding="utf-8") as handle:
+    value = json.load(handle)
+if provider == "codex":
+    tokens = value.get("tokens") if isinstance(value, dict) else None
+    required = {"id_token", "access_token", "refresh_token", "account_id"}
+    valid = isinstance(tokens, dict) and required.issubset(tokens) and all(isinstance(tokens[key], str) and tokens[key] for key in required)
+else:
+    valid = isinstance(value, dict) and bool(value)
+if not valid:
+    raise SystemExit("Imported credential did not match the expected format")
+os.chmod(path, 0o600)
+PY
+  mv -f -- "$temporary" "$destination"
+  printf 'Imported %s profile %s.\n' "$provider" "$label"
+}
+
+login() {
+  local provider="$1" label="$2"
+  valid_provider "$provider" && valid_label "$label" || { usage; exit 2; }
+  case "$provider" in
+    codex)
+      mkdir -p "${root}/codex/${label}"
+      chmod 700 "${root}/codex/${label}"
+      CODEX_ACCOUNT="$label" "$HOME/.local/bin/codex" login --device-auth
+      [[ -s "$(profile_file codex "$label")" ]] || {
+        printf 'Codex login did not create the expected profile.\n' >&2
+        exit 1
+      }
+      write_state codex "$label"
+      printf 'Saved and selected codex profile %s.\n' "$label"
+      ;;
+    claude)
+      if provider_busy claude; then
+        printf 'Close active claude sessions before logging into another account.\n' >&2
+        exit 1
+      fi
+      claude auth login --claudeai
+      capture claude "$label"
+      ;;
+  esac
+}
+
+activate() {
+  local provider="$1" label="$2" source destination temporary
+  valid_provider "$provider" && valid_label "$label" || { usage; exit 2; }
+  source="$(profile_file "$provider" "$label")"
+  [[ -s "$source" ]] || { printf '%s profile %s is not enrolled on A1.\n' "$provider" "$label" >&2; exit 1; }
+
+  if [[ "$provider" == codex ]]; then
+    write_state codex "$label"
+    rm -f -- "${legacy_pending}/codex" 2>/dev/null || true
+    printf 'Selected codex profile %s for new sessions; running sessions are unchanged.\n' "$label"
+    return
+  fi
+
+  destination="$(source_file "$provider")"
+  if provider_busy "$provider"; then
+    printf 'An active %s process is using the current credentials; switch was refused.\n' "$provider" >&2
+    exit 1
+  fi
+  mkdir -p "$(dirname "$destination")"
+  temporary="${destination}.tmp.$$"
+  install -m 600 "$source" "$temporary"
+  mv -f -- "$temporary" "$destination"
+  write_state "$provider" "$label"
+  printf 'Selected %s profile %s.\n' "$provider" "$label"
+}
+
+run_codex() {
+  local label="$1"
+  shift
+  valid_label "$label" || { usage; exit 2; }
+  [[ -s "$(profile_file codex "$label")" ]] || {
+    printf 'codex profile %s is not enrolled on A1.\n' "$label" >&2
+    exit 1
+  }
+  CODEX_ACCOUNT="$label" exec "$HOME/.local/bin/codex" "$@"
+}
+
+current() {
+  local provider="${1:-}"
+  if [[ -n "$provider" ]]; then
+    valid_provider "$provider" || { usage; exit 2; }
+    if [[ -s "${state}/${provider}" ]]; then
+      { IFS= read -r label; IFS= read -r changed; } <"${state}/${provider}"
+      printf '%s=%s\n%s_updated=%s\n' "$provider" "$label" "$provider" "$changed"
+    else
+      printf '%s=none\n%s_updated=0\n' "$provider" "$provider"
+    fi
+    return
+  fi
+  current codex
+  current claude
+}
+
+list_profiles() {
+  local provider="${1:-}" directory profile
+  if [[ -z "$provider" ]]; then
+    list_profiles codex
+    list_profiles claude
+    return
+  fi
+  valid_provider "$provider" || { usage; exit 2; }
+  directory="${root}/${provider}"
+  printf '%s:' "$provider"
+  while IFS= read -r profile; do
+    printf ' %s' "$(basename "$(dirname "$profile")")"
+  done < <(find "$directory" -mindepth 2 -maxdepth 2 -type f -print | sort)
+  printf '\n'
+}
+
+command="${1:-}"
+case "$command" in
+  login) [[ $# -eq 3 ]] || { usage; exit 2; }; login "$2" "$3" ;;
+  capture) [[ $# -eq 3 ]] || { usage; exit 2; }; capture "$2" "$3" ;;
+  import-stdin) [[ $# -eq 3 ]] || { usage; exit 2; }; import_stdin "$2" "$3" ;;
+  use|request) [[ $# -eq 3 ]] || { usage; exit 2; }; activate "$2" "$3" ;;
+  run) [[ $# -ge 3 && "$2" == codex ]] || { usage; exit 2; }; shift 2; run_codex "$@" ;;
+  current) current "${2:-}" ;;
+  list) list_profiles "${2:-}" ;;
+  *) usage; exit 2 ;;
+esac

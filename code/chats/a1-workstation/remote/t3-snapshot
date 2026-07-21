@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+reason="${1:-daily}"
+base="${HOME}/.local/share/t3/data/userdata"
+source_db="${base}/state.sqlite"
+backup_root="${HOME}/.local/share/t3/backups"
+daily="${backup_root}/daily"
+weekly="${backup_root}/weekly"
+timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
+
+[[ -f "$source_db" ]] || exit 0
+mkdir -p "$daily" "$weekly"
+chmod 700 "$backup_root" "$daily" "$weekly"
+
+target="${daily}/${timestamp}-${reason}.sqlite"
+sqlite3 "$source_db" ".timeout 10000" ".backup '${target}'"
+check="$(sqlite3 "$target" 'PRAGMA integrity_check;')"
+if [[ "$check" != "ok" ]]; then
+  rm -f -- "$target"
+  printf 'T3 snapshot failed integrity check.\n' >&2
+  exit 1
+fi
+chmod 600 "$target"
+
+if [[ "$(date -u +%u)" == "7" ]]; then
+  cp --reflink=auto -- "$target" "${weekly}/$(basename "$target")"
+fi
+
+find "$daily" -type f -name '*.sqlite' -mtime +14 -delete
+find "$weekly" -type f -name '*.sqlite' -mtime +70 -delete
+printf '%s\n' "$target"

@@ -3,13 +3,23 @@ set -eu
 
 mode="${1:-copy}"
 case "$mode" in
-  copy|--copy) label=phone ;;
-  open|--open) label=mac-tailnet ;;
-  *) echo 'usage: a1-pair [copy|open]' >&2; exit 2 ;;
+  copy|--copy)
+    label=phone
+    base_url=https://a1.tail70e8a6.ts.net
+    ;;
+  open|--open)
+    label=mac-tailnet
+    base_url=https://a1.tail70e8a6.ts.net
+    ;;
+  short|--short)
+    label=mac-short
+    base_url=http://a1
+    ;;
+  *) echo 'usage: a1-pair [copy|open|short]' >&2; exit 2 ;;
 esac
 
 pair_url="$(/usr/bin/ssh -o BatchMode=yes a1 \
-  '~/.local/bin/t3-current auth pairing create --base-dir ~/.local/share/t3/data --ttl 5m --label tailnet-client --base-url https://a1.tail70e8a6.ts.net --json' \
+  "~/.local/bin/t3-current auth pairing create --base-dir ~/.local/share/t3/data --ttl 5m --label '$label' --base-url '$base_url' --json" \
   | /usr/bin/python3 -c 'import json,sys; print(json.load(sys.stdin)["pairUrl"])')"
 
 if [ "$label" = phone ]; then

@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+usage: devrun start <name> <port> -- <command> [args...]
+       devrun stop <name>
+       devrun restart <name>
+       devrun status [name]
+       devrun logs <name>
+
+Bind web servers to 127.0.0.1, then use `a1-port PORT` on the Mac.
+The process survives SSH disconnects and laptop sleep through systemd.
+EOF
+}
+
+valid_name() { [[ "$1" =~ ^[0-9A-Za-z][0-9A-Za-z._-]{0,63}$ ]]; }
+valid_port() { [[ "$1" =~ ^[0-9]+$ ]] && (( 1 <= 10#$1 && 10#$1 <= 65535 )); }
+unit_for() { printf 'dev-%s.service' "$1"; }
+
+command="${1:-}"
+case "$command" in
+  start)
+    [[ $# -ge 5 && "$4" == -- ]] || { usage; exit 2; }
+    name="$2"; port="$3"; shift 4
+    valid_name "$name" && valid_port "$port" || { usage; exit 2; }
+    unit="$(unit_for "$name")"
+    if systemctl --user is-active --quiet "$unit"; then
+      printf '%s is already running.\n' "$unit" >&2
+      exit 1
+    fi
+    systemd-run --user --unit="$unit" --collect \
+      --description="A1 development server ${name} on ${port}" \
+      --working-directory="$PWD" \
+      --setenv="PORT=${port}" \
+      --setenv="PATH=${HOME}/.local/bin:${HOME}/.local/share/mise/shims:/usr/local/bin:/usr/bin:/bin" \
+      --property=Restart=on-failure \
+      --property=RestartSec=3 \
+      -- "$@"
+    printf '%s started in %s on expected port %s.\n' "$name" "$PWD" "$port"
+    ;;
+  stop|restart)
+    [[ $# -eq 2 ]] && valid_name "$2" || { usage; exit 2; }
+    systemctl --user "$command" "$(unit_for "$2")"
+    ;;
+  status)
+    if [[ $# -eq 2 ]]; then
+      valid_name "$2" || { usage; exit 2; }
+      systemctl --user status "$(unit_for "$2")" --no-pager
+    else
+      systemctl --user list-units 'dev-*.service' --all --no-pager
+    fi
+    ;;
+  logs)
+    [[ $# -eq 2 ]] && valid_name "$2" || { usage; exit 2; }
+    journalctl --user -u "$(unit_for "$2")" -f
+    ;;
+  *) usage; exit 2 ;;
+esac

@@ -1,0 +1,174 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+root="${HOME}/.local/share/t3"
+versions="${root}/versions"
+current="${root}/current"
+pending="${root}/pending-version"
+port="${T3_PORT:-3773}"
+
+usage() {
+  printf '%s\n' \
+    'usage: t3-sync install <version> [--defer]' \
+    '       t3-sync activate [<version>] [--force]' \
+    '       t3-sync rollback' \
+    '       t3-sync status'
+}
+
+valid_version() {
+  [[ "$1" =~ ^[0-9A-Za-z][0-9A-Za-z._+-]{0,127}$ ]]
+}
+
+version_path() {
+  printf '%s/%s' "$versions" "$1"
+}
+
+binary_for() {
+  printf '%s/node_modules/.bin/t3' "$(version_path "$1")"
+}
+
+current_version() {
+  if [[ -L "$current" ]]; then
+    basename "$(readlink "$current")"
+  fi
+}
+
+providers_busy() {
+  pgrep -u "$(id -u)" -f '(^|/)(codex|claude)([[:space:]]|$)' >/dev/null 2>&1
+}
+
+healthy() {
+  local code
+  code="$(curl --connect-timeout 2 --max-time 3 --silent --show-error --output /dev/null --write-out '%{http_code}' "http://127.0.0.1:${port}/health" || true)"
+  [[ "$code" =~ ^[1234][0-9][0-9]$ ]]
+}
+
+wait_healthy() {
+  local attempt
+  for attempt in {1..30}; do
+    if healthy; then
+      return 0
+    fi
+    sleep 1
+  done
+  return 1
+}
+
+snapshot() {
+  if [[ -x "${HOME}/.local/bin/t3-snapshot" ]]; then
+    "${HOME}/.local/bin/t3-snapshot" pre-update
+  fi
+}
+
+prune_versions() {
+  local keep candidate active pending_version
+  active="$(current_version || true)"
+  pending_version="$(cat "$pending" 2>/dev/null || true)"
+  keep=0
+  while IFS= read -r candidate; do
+    [[ -n "$candidate" ]] || continue
+    if [[ "$candidate" == "$active" || "$candidate" == "$pending_version" || $keep -lt 3 ]]; then
+      keep=$((keep + 1))
+      continue
+    fi
+    case "$candidate" in
+      "$versions"/*) rm -rf -- "$candidate" ;;
+    esac
+  done < <(find "$versions" -mindepth 1 -maxdepth 1 -type d -not -name '.*.tmp.*' -print0 | xargs -0 stat -c '%Y %n' 2>/dev/null | sort -rn | cut -d' ' -f2-)
+}
+
+install_version() {
+  local version="$1" mode="${2:-}"
+  local destination stage
+  valid_version "$version" || { printf 'Invalid T3 version: %s\n' "$version" >&2; exit 2; }
+  mkdir -p "$versions"
+  destination="$(version_path "$version")"
+  if [[ ! -x "$(binary_for "$version")" ]]; then
+    stage="${versions}/.${version}.tmp.$$"
+    rm -rf -- "$stage"
+    mkdir -p "$stage"
+    npm install --prefix "$stage" --omit=dev --no-audit --no-fund "t3@${version}"
+    (
+      cd "$stage"
+      npm approve-scripts node-pty msgpackr-extract >/dev/null 2>&1 || true
+      npm rebuild node-pty msgpackr-extract >/dev/null
+    )
+    "${stage}/node_modules/.bin/t3" --version
+    mv "$stage" "$destination"
+  fi
+  if [[ "$mode" == "--defer" ]]; then
+    printf '%s\n' "$version" >"$pending"
+    printf 'T3 %s is installed and queued for idle activation.\n' "$version"
+  else
+    activate_version "$version" "${3:-}"
+  fi
+}
+
+activate_version() {
+  local version="$1" force="${2:-}"
+  local old target
+  valid_version "$version" || { printf 'Invalid T3 version: %s\n' "$version" >&2; exit 2; }
+  target="$(version_path "$version")"
+  [[ -x "${target}/node_modules/.bin/t3" ]] || { printf 'T3 %s is not installed.\n' "$version" >&2; exit 1; }
+  if [[ "$force" != "--force" ]] && providers_busy; then
+    printf 'A Codex or Claude process is active; keeping T3 %s queued.\n' "$version"
+    printf '%s\n' "$version" >"$pending"
+    exit 0
+  fi
+  old="$(current_version || true)"
+  if [[ "$old" == "$version" ]] && systemctl --user is-active --quiet t3-a1.service && healthy; then
+    rm -f -- "$pending"
+    printf 'T3 %s is already active and healthy.\n' "$version"
+    exit 0
+  fi
+  snapshot
+  systemctl --user stop t3-a1.service 2>/dev/null || true
+  ln -sfn "versions/${version}" "$current"
+  systemctl --user start t3-a1.service
+  if wait_healthy; then
+    rm -f -- "$pending"
+    prune_versions
+    printf 'T3 %s is active and healthy.\n' "$version"
+    exit 0
+  fi
+  printf 'T3 %s failed its health check.\n' "$version" >&2
+  if [[ -n "$old" && -x "$(binary_for "$old")" ]]; then
+    systemctl --user stop t3-a1.service 2>/dev/null || true
+    ln -sfn "versions/${old}" "$current"
+    systemctl --user start t3-a1.service
+    wait_healthy || true
+    printf 'Rolled back to T3 %s.\n' "$old" >&2
+  fi
+  exit 1
+}
+
+rollback() {
+  local active candidate
+  active="$(current_version || true)"
+  candidate="$(find "$versions" -mindepth 1 -maxdepth 1 -type d -print0 | xargs -0 stat -c '%Y %n' 2>/dev/null | sort -rn | cut -d' ' -f2- | while IFS= read -r path; do [[ "$(basename "$path")" != "$active" ]] && { basename "$path"; break; }; done)"
+  [[ -n "$candidate" ]] || { printf 'No previous T3 version is available.\n' >&2; exit 1; }
+  activate_version "$candidate" --force
+}
+
+status() {
+  printf 'active=%s\n' "$(current_version || printf none)"
+  printf 'pending=%s\n' "$(cat "$pending" 2>/dev/null || printf none)"
+  printf 'service=%s\n' "$(systemctl --user is-active t3-a1.service 2>/dev/null || true)"
+  if healthy; then printf 'health=ok\n'; else printf 'health=failed\n'; fi
+}
+
+command="${1:-}"
+case "$command" in
+  install)
+    [[ $# -ge 2 ]] || { usage; exit 2; }
+    install_version "$2" "${3:-}"
+    ;;
+  activate)
+    version="${2:-$(cat "$pending" 2>/dev/null || true)}"
+    [[ -n "$version" ]] || exit 0
+    activate_version "$version" "${3:-}"
+    ;;
+  rollback) rollback ;;
+  status) status ;;
+  *) usage; exit 2 ;;
+esac

@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+accounts_root="${HOME}/.local/share/ai-accounts"
+state_file="${accounts_root}/state/codex"
+shared_home="${HOME}/.codex"
+
+label="${CODEX_ACCOUNT:-}"
+if [[ -z "$label" && -s "$state_file" ]]; then
+  IFS= read -r label <"$state_file"
+fi
+label="${label:-new}"
+[[ "$label" =~ ^[0-9A-Za-z][0-9A-Za-z._-]{0,63}$ ]] || {
+  printf 'Invalid Codex account label: %s\n' "$label" >&2
+  exit 2
+}
+
+profile_home="${accounts_root}/codex/${label}"
+[[ -s "${profile_home}/auth.json" ]] || {
+  printf 'Codex account %s is not enrolled. Run: ai-account login codex %s\n' "$label" "$label" >&2
+  exit 1
+}
+mkdir -p "$profile_home"
+chmod 700 "$profile_home"
+
+# Share durable configuration and installed extensions while keeping auth and
+# runtime/session databases isolated per account. Existing processes retain
+# their original CODEX_HOME when the default account changes.
+for item in config.toml requirements.toml AGENTS.md skills plugins rules packages; do
+  [[ -e "${shared_home}/${item}" || -L "${shared_home}/${item}" ]] || continue
+  [[ -e "${profile_home}/${item}" || -L "${profile_home}/${item}" ]] || \
+    ln -s "${shared_home}/${item}" "${profile_home}/${item}"
+done
+
+real_codex="${shared_home}/packages/standalone/current/codex"
+if [[ ! -x "$real_codex" ]]; then
+  real_codex="${HOME}/.local/share/mise/shims/codex"
+fi
+[[ -x "$real_codex" ]] || {
+  printf 'No real Codex executable was found.\n' >&2
+  exit 127
+}
+
+export CODEX_HOME="$profile_home"
+exec "$real_codex" "$@"
