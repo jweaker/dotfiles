@@ -16,10 +16,10 @@ label="${label:-new}"
 }
 
 profile_home="${accounts_root}/codex/${label}"
-[[ -s "${profile_home}/auth.json" ]] || {
+if [[ ! -s "${profile_home}/auth.json" && "${1:-}" != "login" ]]; then
   printf 'Codex account %s is not enrolled. Run: ai-account login codex %s\n' "$label" "$label" >&2
   exit 1
-}
+fi
 mkdir -p "$profile_home"
 chmod 700 "$profile_home"
 

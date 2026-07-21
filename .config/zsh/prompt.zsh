@@ -1,9 +1,10 @@
 typeset -g ZSH="${ZSH:-$HOME/.zsh}"
 
-# Interactive shells always choose the same prompt.  The previous TTY check
-# made embedded terminals fall through to Starship while normal PTYs loaded
-# Powerlevel10k, which made new terminals appear to alternate themes.
-if [[ -f "$ZSH/P10K" && -r "$ZSH/themes/powerlevel10k/powerlevel10k.zsh-theme" ]]; then
+# Use Powerlevel10k whenever output is a terminal. Embedded terminals can have
+# non-TTY stdin, so testing stdout alone keeps the visible prompt deterministic.
+# Non-TTY interactive shells use the lightweight prompt and avoid gitstatus's
+# job-control requirement.
+if [[ -t 1 && -f "$ZSH/P10K" && -r "$ZSH/themes/powerlevel10k/powerlevel10k.zsh-theme" ]]; then
   source "$ZSH/themes/powerlevel10k/powerlevel10k.zsh-theme"
   [[ -r "$HOME/.p10k.zsh" ]] && source "$HOME/.p10k.zsh"
 else

@@ -6,7 +6,7 @@ user_name="jweaker"
 home_dir="/home/${user_name}"
 user_uid="$(id -u "$user_name")"
 runtime_dir="/run/user/${user_uid}"
-user_path="$home_dir/.local/bin:$home_dir/.local/share/mise/shims:/usr/local/bin:/usr/bin:/bin"
+user_path="$home_dir/.local/account-bin:$home_dir/.local/bin:$home_dir/.local/share/mise/shims:/usr/local/bin:/usr/bin:/bin"
 
 install -d -m 700 -o "$user_name" -g "$user_name" \
   "$home_dir/.local/share/t3" \
@@ -37,7 +37,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 WorkingDirectory=%h/code
-Environment=PATH=%h/.local/bin:%h/.local/share/mise/shims:/usr/local/bin:/usr/bin:/bin
+Environment=PATH=%h/.local/account-bin:%h/.local/bin:%h/.local/share/mise/shims:/usr/local/bin:/usr/bin:/bin
 Environment=NODE_ENV=production
 ExecStart=%h/.local/bin/t3-current serve --mode web --host 127.0.0.1 --port 3773 --base-dir %h/.local/share/t3/data --no-browser
 Restart=on-failure

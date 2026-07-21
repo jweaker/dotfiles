@@ -1,87 +1,126 @@
 #!/usr/bin/env python3
-"""Make new A1 Codex sessions follow the Mac Codex Switcher label."""
+"""Synchronize selected Codex and Claude profile labels between Mac and A1."""
 
 from __future__ import annotations
 
-import datetime as dt
 import json
 import os
 from pathlib import Path
 import re
+import shlex
+import shutil
 import subprocess
 import sys
 
+
 HOME = Path.home()
-SWITCHER = HOME / ".codex-switcher" / "accounts.json"
-STATE_DIR = HOME / "Library" / "Application Support" / "A1 Workstation"
-STATE = STATE_DIR / "codex-account-sync.json"
+MANAGER = HOME / ".local" / "bin" / "ai-account"
+STATE = HOME / "Library" / "Application Support" / "A1 Workstation" / "ai-account-sync.json"
 LABEL = re.compile(r"^[0-9A-Za-z][0-9A-Za-z._-]{0,63}$")
+SSH = ["/usr/bin/ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8", "a1"]
 
 
 def atomic_json(path: Path, value: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.tmp.{os.getpid()}")
-    with temporary.open("w", encoding="utf-8") as handle:
-        json.dump(value, handle, indent=2)
-        handle.write("\n")
-    os.chmod(temporary, 0o600)
+    temporary.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
+    temporary.chmod(0o600)
     os.replace(temporary, path)
 
 
-def mac_account() -> tuple[str, float, dict, dict]:
-    store = json.loads(SWITCHER.read_text(encoding="utf-8"))
-    active_id = store.get("active_account_id")
-    account = next((item for item in store.get("accounts", []) if item.get("id") == active_id), None)
-    if not account:
-        raise RuntimeError("Codex Switcher has no active account")
-    label = str(account.get("name", ""))
-    if not LABEL.fullmatch(label):
-        raise RuntimeError(f"Unexpected Codex account label: {label!r}")
-    raw_time = account.get("last_used_at") or "1970-01-01T00:00:00Z"
-    when = dt.datetime.fromisoformat(str(raw_time).replace("Z", "+00:00")).timestamp()
-    return label, when, store, account
+def ensure_claude_launcher() -> None:
+    """Keep GUI-launched tools on the account-aware Claude wrapper after updates."""
+    source = HOME / ".local" / "account-bin" / "claude"
+    destination = HOME / ".local" / "bin" / "claude"
+    if not source.is_file():
+        return
+    try:
+        current = destination.read_bytes()
+    except OSError:
+        current = b""
+    expected = source.read_bytes()
+    if current == expected and not destination.is_symlink():
+        return
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    temporary = destination.with_name(f".{destination.name}.tmp.{os.getpid()}")
+    temporary.write_bytes(expected)
+    temporary.chmod(0o755)
+    os.replace(temporary, destination)
 
 
-def remote_account() -> tuple[str, float]:
-    result = subprocess.run(
-        ["/usr/bin/ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8", "a1", "~/.local/bin/ai-account current codex"],
-        check=True,
-        text=True,
-        capture_output=True,
-        timeout=15,
-    )
+def command(target: str, arguments: list[str], *, check: bool = True) -> subprocess.CompletedProcess[str]:
+    if target == "mac":
+        argv = [str(MANAGER), *arguments]
+    else:
+        remote = "~/.local/bin/ai-account " + " ".join(shlex.quote(argument) for argument in arguments)
+        argv = [*SSH, remote]
+    return subprocess.run(argv, check=check, text=True, capture_output=True, timeout=20)
+
+
+def states(target: str) -> dict[str, tuple[str, int]]:
+    result = command(target, ["current"])
     values = dict(line.split("=", 1) for line in result.stdout.splitlines() if "=" in line)
-    label = values.get("codex", "none")
-    changed = float(values.get("codex_updated", "0"))
-    if label != "none" and not LABEL.fullmatch(label):
-        raise RuntimeError("A1 returned an invalid Codex account label")
-    return label, changed
+    parsed: dict[str, tuple[str, int]] = {}
+    for provider in ("codex", "claude"):
+        label = values.get(provider, "none")
+        if label != "none" and not LABEL.fullmatch(label):
+            raise RuntimeError(f"{target} returned an invalid {provider} label")
+        parsed[provider] = (label, int(values.get(f"{provider}_updated", "0")))
+    return parsed
 
 
-def select_on_a1(label: str) -> None:
-    subprocess.run(
-        ["/usr/bin/ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8", "a1", f"~/.local/bin/ai-account use codex '{label}'"],
-        check=True,
-        timeout=15,
-    )
+def has(target: str, provider: str, label: str) -> bool:
+    return command(target, ["has", provider, label], check=False).returncode == 0
+
+
+def select(target: str, provider: str, label: str) -> None:
+    result = command(target, ["use", provider, label])
+    if result.stdout.strip():
+        print(f"[{target}] {result.stdout.strip()}")
+
+
+def sync_provider(provider: str, local: tuple[str, int], remote: tuple[str, int]) -> dict[str, object]:
+    local_label, local_changed = local
+    remote_label, remote_changed = remote
+    if local_label == remote_label:
+        return {"mac": local_label, "a1": remote_label, "status": "in-sync"}
+
+    if local_label == "none":
+        source, destination, desired = "a1", "mac", remote_label
+    elif remote_label == "none":
+        source, destination, desired = "mac", "a1", local_label
+    elif remote_changed > local_changed:
+        source, destination, desired = "a1", "mac", remote_label
+    else:
+        source, destination, desired = "mac", "a1", local_label
+
+    if desired == "none":
+        return {"mac": local_label, "a1": remote_label, "status": "no-selection"}
+    if not has(destination, provider, desired):
+        message = f"{provider} profile {desired!r} selected on {source}, but it is not enrolled on {destination}"
+        print(f"[a1-ai-account-sync] {message}", file=sys.stderr)
+        return {"mac": local_label, "a1": remote_label, "status": "missing-profile", "message": message}
+    select(destination, provider, desired)
+    return {"mac": desired, "a1": desired, "status": f"{source}-to-{destination}"}
 
 
 def main() -> int:
-    if not SWITCHER.exists():
+    if not MANAGER.is_file():
         return 0
-    STATE_DIR.mkdir(parents=True, exist_ok=True)
-    local, _, _, _ = mac_account()
-    remote, _ = remote_account()
-    if local != remote:
-        select_on_a1(local)
-        remote = local
-    atomic_json(STATE, {"local": local, "remote": remote})
+    ensure_claude_launcher()
+    local = states("mac")
+    remote = states("a1")
+    result = {
+        provider: sync_provider(provider, local[provider], remote[provider])
+        for provider in ("codex", "claude")
+    }
+    atomic_json(STATE, result)
     return 0
 
 
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except (OSError, RuntimeError, subprocess.SubprocessError, json.JSONDecodeError) as error:
-        print(f"[a1-codex-account-sync] {error}", file=sys.stderr)
+    except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as error:
+        print(f"[a1-ai-account-sync] {error}", file=sys.stderr)
         raise SystemExit(1)

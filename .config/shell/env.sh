@@ -53,6 +53,7 @@ case "$(uname -s 2>/dev/null)" in
 esac
 
 path_append /usr/local/go/bin
+path_prepend "$HOME/.local/account-bin"
 export PATH PNPM_HOME
 
 if command -v nvim >/dev/null 2>&1; then

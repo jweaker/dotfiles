@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+accounts_root="${HOME}/.local/share/ai-accounts"
+state_file="${accounts_root}/state/claude"
+shared_home="${HOME}/.claude"
+
+label="${CLAUDE_ACCOUNT:-}"
+if [[ -z "$label" && -s "$state_file" ]]; then
+  IFS= read -r label <"$state_file"
+fi
+label="${label:-main}"
+[[ "$label" =~ ^[0-9A-Za-z][0-9A-Za-z._-]{0,63}$ ]] || {
+  printf 'Invalid Claude account label: %s\n' "$label" >&2
+  exit 2
+}
+
+profile_home="${accounts_root}/claude/${label}"
+mkdir -p "$profile_home"
+chmod 700 "$profile_home"
+
+# Share user preferences and extensions, while each profile keeps independent
+# authentication, projects, history, and session state.
+for item in CLAUDE.md settings.json settings.local.json mcp.json commands hooks skills plugins; do
+  [[ -e "${shared_home}/${item}" || -L "${shared_home}/${item}" ]] || continue
+  [[ -e "${profile_home}/${item}" || -L "${profile_home}/${item}" ]] || \
+    ln -s "${shared_home}/${item}" "${profile_home}/${item}"
+done
+
+case "${1:-} ${2:-}" in
+  "auth login"|"auth logout"|"auth status") ;;
+  *)
+    [[ -f "${profile_home}/.ai-account-enrolled" ]] || {
+      printf 'Claude account %s is not enrolled. Run: ai-account login claude %s\n' "$label" "$label" >&2
+      exit 1
+    }
+    ;;
+esac
+
+real_claude="$(python3 - "$HOME/.local/share/claude/versions" <<'PY'
+import os
+from pathlib import Path
+import re
+import sys
+
+root = Path(sys.argv[1])
+candidates = [path for path in root.iterdir() if path.is_file() and os.access(path, os.X_OK)]
+if not candidates:
+    raise SystemExit(1)
+
+def version_key(path):
+    return tuple(int(value) for value in re.findall(r"\d+", path.name)), path.stat().st_mtime_ns
+
+print(max(candidates, key=version_key))
+PY
+)"
+[[ -x "$real_claude" ]] || {
+  printf 'No real Claude executable was found.\n' >&2
+  exit 127
+}
+
+export CLAUDE_CONFIG_DIR="$profile_home"
+exec "$real_claude" "$@"

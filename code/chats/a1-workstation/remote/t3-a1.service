@@ -1,0 +1,17 @@
+[Unit]
+Description=T3 Code headless workspace
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/code
+Environment=PATH=%h/.local/account-bin:%h/.local/bin:%h/.local/share/mise/shims:/usr/local/bin:/usr/bin:/bin
+Environment=NODE_ENV=production
+ExecStart=%h/.local/bin/t3-current serve --mode web --host 127.0.0.1 --port 3773 --base-dir %h/.local/share/t3/data --no-browser
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+
+[Install]
+WantedBy=default.target

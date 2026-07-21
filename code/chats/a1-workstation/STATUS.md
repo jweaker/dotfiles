@@ -15,9 +15,10 @@
 - Node 24, Bun, uv, Rust, Tauri/Electron Linux dependencies, Wrangler, Codex, Claude Code, Neovim, Git LFS, GitHub CLI, Playwright Chromium, Xvfb, Mosh, tmux, and YADM installed.
 - GitHub machine SSH key registered and verified. Private key remains only on A1.
 - GitHub CLI and Wrangler OAuth sessions are installed on A1 and verified against the intended accounts.
-- Codex profiles `amore`, `main`, and `new` imported mode 0600. Each now has an isolated `CODEX_HOME`; `main` is the default, switching no longer waits for running processes, and the Mac-to-A1 label sync is one-way.
+- Codex profiles `amore`, `main`, and `new` are enrolled on both machines. Each has an isolated `CODEX_HOME`; `main` is the default, switching never waits for running processes, and bidirectional Mac/A1 selection was live-tested `main → amore → main`.
+- Claude now uses independently authenticated named `CLAUDE_CONFIG_DIR` profiles on both machines. Bidirectional selection is enabled and safely pauses on a missing destination label; initial Claude browser enrollment is still required on each machine.
 - The official standalone Codex build, Bubblewrap AppArmor profile, and Remote Control daemon are working. A fresh phone pairing code can be generated on demand.
-- Powerlevel10k prompt selection is deterministic across embedded and normal terminals; Starship is no longer a conditional fallback.
+- Powerlevel10k prompt selection is deterministic across embedded and normal terminals, while non-TTY shells avoid gitstatus/job-control initialization errors.
 - Portable shell/dotfile changes, Mac helper LaunchAgents, and the non-secret workstation provisioning assets are committed to `jweaker/dotfiles`.
 - Cloudflare Tunnel `a1-code` routes `code.jweaker.xyz` through Cloudflare Access to the JWT-validating T3 pairing bridge. The public hostname redirects to Access and the origin rejects requests without a valid assertion.
 - The accidental `code.jweaker.xyz.itsocr.com` DNS record was deleted; the existing DigitalOcean/itsocr tunnels were not modified.
@@ -25,7 +26,7 @@
 ## Intentionally waiting on the owner
 
 - T3 Connect headless authorization code, then service restart/verification.
-- A fresh Claude Code login; the Mac Keychain entry contained no active tokens and was not usable.
+- Enroll each desired Claude label once on the Mac and A1; neither machine currently has an active Claude credential.
 - Change the password disclosed in chat on both macOS and A1. SSH password authentication is already disabled.
 - Enter the Raspberry Pi sudo password once to install its staged quality-of-life packages; SSH key access now works.
 

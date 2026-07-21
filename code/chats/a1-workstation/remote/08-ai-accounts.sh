@@ -8,6 +8,9 @@ runtime_dir="/run/user/${user_uid}"
 
 install -m 755 -o "$user_name" -g "$user_name" /tmp/ai-account "$home_dir/.local/bin/ai-account"
 install -m 755 -o "$user_name" -g "$user_name" /tmp/codex-account-wrapper "$home_dir/.local/bin/codex"
+install -d -m 700 -o "$user_name" -g "$user_name" "$home_dir/.local/account-bin"
+install -m 755 -o "$user_name" -g "$user_name" /tmp/codex-account-wrapper "$home_dir/.local/account-bin/codex"
+install -m 755 -o "$user_name" -g "$user_name" /tmp/claude-account-wrapper "$home_dir/.local/account-bin/claude"
 install -m 644 -o "$user_name" -g "$user_name" /tmp/codex-remote-control@.service \
   "$home_dir/.config/systemd/user/codex-remote-control@.service"
 install -d -m 700 -o "$user_name" -g "$user_name" \

@@ -7,10 +7,10 @@ This directory contains the reproducible provisioning and integration assets for
 - `t3-a1.service` runs the exact T3 Code Nightly version selected by `~/.local/share/t3/current` on loopback port 3773.
 - `t3-sync` installs versions atomically, queues activation while Codex or Claude is active, health-checks the new version, and rolls back on failure.
 - `t3-snapshot.timer` creates integrity-checked SQLite backups daily under `~/.local/share/t3/backups` (14 daily and 10 weekly weeks).
-- `ai-account` gives each Codex profile an isolated `CODEX_HOME`; changing the default affects new processes immediately without interrupting running sessions.
+- `ai-account` gives Codex and Claude named, isolated profiles; changing the default affects new processes immediately without interrupting running sessions.
 - `devrun` is an optional convenience for development servers that should survive SSH disconnects and gain service-style logs/restarts.
 - `a1-screenshot` provides a headless Chromium screenshot smoke test for agent/browser work.
-- Mac LaunchAgents mirror the installed T3 Nightly version and the selected Codex profile label to the A1.
+- Mac LaunchAgents mirror the installed T3 Nightly version and synchronize selected Codex and Claude profile labels in both directions with the A1.
 
 ## Everyday commands
 
@@ -25,6 +25,9 @@ a1-pair short                  # pair and open the short http://a1 origin
 a1-pair copy                   # copy a five-minute pairing link for a phone
 a1-port 3000                   # localhost:3000 -> A1 localhost:3000
 a1-port 8080 8081              # A1 :8080 -> Mac :8081
+ai-account list                # enrolled accounts; * marks each default
+ai-account login claude main   # enroll Claude label main on this Mac
+ai-account use claude main     # select it for new Claude processes
 ```
 
 On the A1:
@@ -37,6 +40,7 @@ ai-account login codex main
 ai-account use codex main
 ai-account run codex amore     # explicit one-off account, concurrently
 ai-account login claude main
+ai-account remove claude old
 devrun start web 3000 -- bun run dev -- --hostname 127.0.0.1
 devrun status web
 devrun logs web
@@ -50,19 +54,36 @@ The short private T3 URL is `http://a1`; Tailscale MagicDNS resolves `a1` on eve
 
 ## Account profiles
 
-The A1 currently uses independently protected files under `~/.local/share/ai-accounts`. Common operations are:
+Both machines use the same account labels, but each keeps its own independently protected credentials. Only the selected label and change time cross SSH; OAuth tokens and API keys are never synchronized.
+
+Codex accounts on the Mac are added and removed in Codex Switcher. Give the corresponding A1 credential the exact same label once:
 
 ```sh
-ai-account use codex main
-ai-account use codex amore
-ai-account use codex new
-ai-account run codex main
-ai-account login claude main
-ai-account login claude second
-ai-account use claude second
+ssh -t a1 'ai-account login codex work'
 ```
 
-`ai-account use codex LABEL` changes the default for newly launched Codex processes immediately. Already-running sessions keep the account-specific home they started with. `ai-account run codex LABEL` starts an explicit concurrent terminal session without changing the default. The Mac LaunchAgent synchronizes the Codex Switcher label one-way to A1 and never logs token values. The initial Codex Switcher profiles were imported over encrypted SSH; separate device login remains the recovery path if an OAuth provider rotates or revokes a refresh token.
+Codex Switcher selections then propagate Mac → A1, and `ai-account use codex LABEL` on A1 propagates A1 → Mac. A destination changes only if it already has that label enrolled.
+
+Claude profiles are enrolled once on each machine with the same label:
+
+```sh
+# Mac
+ai-account login claude main
+
+# A1 (complete its separate browser login)
+ssh -t a1 'ai-account login claude main'
+```
+
+After enrollment, select Claude from either side:
+
+```sh
+ai-account use claude main
+ssh a1 'ai-account use claude second'
+```
+
+Remove an inactive Claude profile with `ai-account remove claude LABEL`. Remove Mac Codex profiles in Codex Switcher; remove an inactive A1 Codex profile with `ssh a1 'ai-account remove codex LABEL'`. The manager refuses to remove the currently selected profile.
+
+`ai-account use PROVIDER LABEL` changes the default for newly launched processes immediately. Already-running sessions keep their original account and do not block selection. `ai-account run PROVIDER LABEL` starts an explicit one-off session without changing the default. Separate login remains the recovery path if an OAuth provider rotates or revokes a refresh token.
 
 ## Development server choices
 

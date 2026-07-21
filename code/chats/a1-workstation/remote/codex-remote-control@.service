@@ -6,9 +6,9 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 Environment=CODEX_ACCOUNT=%i
-Environment=PATH=%h/.local/bin:%h/.local/share/mise/shims:/usr/local/bin:/usr/bin:/bin
-ExecStart=%h/.local/bin/codex remote-control start --json
-ExecStop=%h/.local/bin/codex remote-control stop --json
+Environment=PATH=%h/.local/account-bin:%h/.local/bin:%h/.local/share/mise/shims:/usr/local/bin:/usr/bin:/bin
+ExecStart=%h/.local/account-bin/codex remote-control start --json
+ExecStop=%h/.local/account-bin/codex remote-control stop --json
 RemainAfterExit=yes
 TimeoutStartSec=30
 TimeoutStopSec=15
