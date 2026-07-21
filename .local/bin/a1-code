@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+
+socket="${HOME}/.ssh/a1-t3-forward.sock"
+if ! /usr/bin/ssh -S "$socket" -O check a1 >/dev/null 2>&1; then
+  /usr/bin/ssh -M -S "$socket" -fNT \
+    -o ExitOnForwardFailure=yes \
+    -L 127.0.0.1:3773:127.0.0.1:3773 a1
+fi
+
+pair_url="$(/usr/bin/ssh -o BatchMode=yes a1 \
+  '~/.local/bin/t3-current auth pairing create --base-dir ~/.local/share/t3/data --ttl 2m --label macbook --base-url http://127.0.0.1:3773 --json' \
+  | /usr/bin/python3 -c 'import json,sys; print(json.load(sys.stdin)["pairUrl"])')"
+/usr/bin/open "$pair_url"
