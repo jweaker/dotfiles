@@ -39,6 +39,8 @@ yadm sparse-checkout set --no-cone \
   .config/zsh/plugins.zsh \
   .config/zsh/prompt.zsh \
   .local/bin/bootstrap-shell \
+  .local/bin/ai-account \
+  .local/account-bin/claude \
   code/chats/a1-workstation
 yadm checkout -f -B master origin/master
 yadm config branch.master.remote origin
