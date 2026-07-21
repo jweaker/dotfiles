@@ -26,22 +26,22 @@ fi
 yadm fetch --depth=1 origin master
 yadm sparse-checkout init --no-cone
 yadm sparse-checkout set --no-cone \
-  .zshrc \
-  .zprofile \
-  .profile \
-  .p10k.zsh \
-  .tmux.conf \
-  .config/starship.toml \
-  .config/shell/env.sh \
-  .config/zsh/common.zsh \
-  .config/zsh/linux.zsh \
-  .config/zsh/macos.zsh \
-  .config/zsh/plugins.zsh \
-  .config/zsh/prompt.zsh \
-  .local/bin/bootstrap-shell \
-  .local/bin/ai-account \
-  .local/account-bin/claude \
-  code/chats/a1-workstation
+  /.zshrc \
+  /.zprofile \
+  /.profile \
+  /.p10k.zsh \
+  /.tmux.conf \
+  /.config/starship.toml \
+  /.config/shell/env.sh \
+  /.config/zsh/common.zsh \
+  /.config/zsh/linux.zsh \
+  /.config/zsh/macos.zsh \
+  /.config/zsh/plugins.zsh \
+  /.config/zsh/prompt.zsh \
+  /.local/bin/bootstrap-shell \
+  /.local/bin/ai-account \
+  /.local/account-bin/claude \
+  /code/chats/a1-workstation
 yadm checkout -f -B master origin/master
 yadm config branch.master.remote origin
 yadm config branch.master.merge refs/heads/master
