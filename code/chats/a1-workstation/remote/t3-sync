@@ -6,6 +6,17 @@ versions="${root}/versions"
 current="${root}/current"
 pending="${root}/pending-version"
 port="${T3_PORT:-3773}"
+export PATH="${HOME}/.local/share/mise/shims:${HOME}/.local/bin:${HOME}/.local/account-bin:/usr/local/bin:/usr/bin:/bin"
+
+cleanup_stage=""
+cleanup() {
+  if [[ -n "${cleanup_stage:-}" && -d "$cleanup_stage" ]]; then
+    case "$cleanup_stage" in
+      "$versions"/.*.tmp.*) rm -rf -- "$cleanup_stage" ;;
+    esac
+  fi
+}
+trap cleanup EXIT HUP INT TERM
 
 usage() {
   printf '%s\n' \
@@ -34,7 +45,17 @@ current_version() {
 }
 
 providers_busy() {
-  pgrep -u "$(id -u)" -f '(^|/)(codex|claude)([[:space:]]|$)' >/dev/null 2>&1
+  local database busy
+  database="${root}/data/userdata/state.sqlite"
+  [[ -r "$database" ]] || return 0
+  busy="$(sqlite3 -readonly "$database" \
+    "SELECT
+       (SELECT COUNT(*) FROM projection_turns
+          WHERE state IN ('pending', 'starting', 'running')) +
+       (SELECT COUNT(*) FROM projection_thread_messages
+          WHERE is_streaming = 1);" 2>/dev/null)" || return 0
+  [[ "$busy" =~ ^[0-9]+$ ]] || return 0
+  (( busy > 0 ))
 }
 
 healthy() {
@@ -79,22 +100,29 @@ prune_versions() {
 
 install_version() {
   local version="$1" mode="${2:-}"
-  local destination stage
+  local destination stage npm_command
   valid_version "$version" || { printf 'Invalid T3 version: %s\n' "$version" >&2; exit 2; }
+  npm_command="$(command -v npm || true)"
+  [[ -x "$npm_command" ]] || {
+    printf 'npm is unavailable; expected the mise shim under %s.\n' "$HOME/.local/share/mise/shims" >&2
+    exit 127
+  }
   mkdir -p "$versions"
   destination="$(version_path "$version")"
   if [[ ! -x "$(binary_for "$version")" ]]; then
     stage="${versions}/.${version}.tmp.$$"
     rm -rf -- "$stage"
     mkdir -p "$stage"
-    npm install --prefix "$stage" --omit=dev --no-audit --no-fund "t3@${version}"
+    cleanup_stage="$stage"
+    "$npm_command" install --prefix "$stage" --omit=dev --no-audit --no-fund "t3@${version}"
     (
       cd "$stage"
-      npm approve-scripts node-pty msgpackr-extract >/dev/null 2>&1 || true
-      npm rebuild node-pty msgpackr-extract >/dev/null
+      "$npm_command" approve-scripts node-pty msgpackr-extract >/dev/null 2>&1 || true
+      "$npm_command" rebuild node-pty msgpackr-extract >/dev/null
     )
     "${stage}/node_modules/.bin/t3" --version
     mv "$stage" "$destination"
+    cleanup_stage=""
   fi
   if [[ "$mode" == "--defer" ]]; then
     printf '%s\n' "$version" >"$pending"

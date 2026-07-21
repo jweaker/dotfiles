@@ -5,7 +5,7 @@ This directory contains the reproducible provisioning and integration assets for
 ## Installed layout
 
 - `t3-a1.service` runs the exact T3 Code Nightly version selected by `~/.local/share/t3/current` on loopback port 3773.
-- `t3-sync` installs versions atomically, queues activation while Codex or Claude is active, health-checks the new version, and rolls back on failure.
+- `t3-sync` installs versions atomically, activates as soon as no T3 turn is running, health-checks the new version, and rolls back on failure.
 - `t3-snapshot.timer` creates integrity-checked SQLite backups daily under `~/.local/share/t3/backups` (14 daily and 10 weekly weeks).
 - `ai-account` gives Codex and Claude named, isolated profiles; changing the default affects new processes immediately without interrupting running sessions.
 - `devrun` is an optional convenience for development servers that should survive SSH disconnects and gain service-style logs/restarts.
@@ -51,6 +51,8 @@ a1-screenshot http://127.0.0.1:3000 /tmp/web.png
 Use the same absolute repo path on both machines when a CLI session must be moved. Prefer starting Codex, Claude, and T3 conversations on the A1 and reconnecting to them instead of synchronizing live session databases.
 
 The short private T3 URL is `http://a1`; Tailscale MagicDNS resolves `a1` on every signed-in Tailnet device. The secure origin remains `https://a1.tail70e8a6.ts.net/`. Both are Tailnet-only. `code.jweaker.xyz` uses a separate Cloudflare Tunnel and must remain behind an Access Allow policy for the exact owner email.
+
+For the phone, keep Tailscale connected and bookmark `https://a1.tail70e8a6.ts.net/`. This private route does not use Cloudflare OTP, while `code.jweaker.xyz` keeps its six-hour Access session for borrowed laptops. Run `a1-pair copy` on the Mac when the phone needs a fresh T3 pairing link.
 
 ## Account profiles
 

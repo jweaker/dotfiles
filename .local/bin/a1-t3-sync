@@ -34,6 +34,6 @@ fi
 
 printf '%s Queuing A1 T3 %s.\n' "$log_prefix" "$version"
 /usr/bin/ssh -o BatchMode=yes -o ConnectTimeout=8 a1 \
-  "~/.local/bin/t3-sync install '$version' --defer"
+  "~/.local/bin/t3-sync install '$version' --defer && ~/.local/bin/t3-sync activate"
 printf '%s\n' "$version" >"$state_file"
-printf '%s A1 T3 %s installed; activation will wait for idle providers.\n' "$log_prefix" "$version"
+printf '%s A1 T3 %s installed; activated immediately when no turn was running.\n' "$log_prefix" "$version"

@@ -7,9 +7,10 @@
 - `ssh a1` uses `a1.tail70e8a6.ts.net`; `ssh a1-public` retains the Oracle public-IP recovery path.
 - Tailscale direct path measured at 47 ms. Tailscale SSH and Mosh both passed live connection tests.
 - Tailnet-only T3 URLs: short `http://a1` and secure `https://a1.tail70e8a6.ts.net/`.
+- The Android phone is already enrolled and online in Tailscale, so its durable T3 route bypasses Cloudflare OTP while the public hostname retains the six-hour Access policy.
 - T3 `0.0.29-nightly.20260720.859` runs as `t3-a1.service` on loopback port 3773.
 - Atomic T3 install/activation, idle deferral, health rollback, daily SQLite snapshots, and retention timers are enabled.
-- Mac T3 Nightly changes trigger exact-version A1 installation through `xyz.jweaker.a1-t3-sync`.
+- Mac T3 Nightly changes trigger exact-version A1 installation through `xyz.jweaker.a1-t3-sync`; activation checks live T3 turn state instead of treating persistent provider app-servers as permanently busy.
 - Mac helpers: `a1-code`, `a1-port`, and `a1-pair`.
 - A1 persistent dev-server helper: `devrun`. Headless Chromium screenshot helper: `a1-screenshot`.
 - Node 24, Bun, uv, Rust, Tauri/Electron Linux dependencies, Wrangler, Codex, Claude Code, Neovim, Git LFS, GitHub CLI, Playwright Chromium, Xvfb, Mosh, tmux, and YADM installed.
