@@ -1,0 +1,20 @@
+#!/bin/sh
+set -eu
+
+mode="${1:-copy}"
+case "$mode" in
+  copy|--copy) label=phone ;;
+  open|--open) label=mac-tailnet ;;
+  *) echo 'usage: a1-pair [copy|open]' >&2; exit 2 ;;
+esac
+
+pair_url="$(/usr/bin/ssh -o BatchMode=yes a1 \
+  '~/.local/bin/t3-current auth pairing create --base-dir ~/.local/share/t3/data --ttl 5m --label tailnet-client --base-url https://a1.tail70e8a6.ts.net --json' \
+  | /usr/bin/python3 -c 'import json,sys; print(json.load(sys.stdin)["pairUrl"])')"
+
+if [ "$label" = phone ]; then
+  printf '%s' "$pair_url" | /usr/bin/pbcopy
+  echo 'A five-minute A1 T3 pairing link is in your clipboard. Paste it on your Tailnet-connected phone.'
+else
+  /usr/bin/open "$pair_url"
+fi
