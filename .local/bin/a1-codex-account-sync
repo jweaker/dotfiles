@@ -111,6 +111,9 @@ def main() -> int:
     if remote == "none":
         atomic_json(STATE, {"local": local, "remote": remote})
         return 0
+    if local == remote:
+        atomic_json(STATE, {"local": local, "remote": remote})
+        return 0
     if local_changed and (not remote_changed or local_time >= remote_time):
         select_on_a1(local)
         remote = local
