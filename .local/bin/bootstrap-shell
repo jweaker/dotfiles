@@ -14,6 +14,22 @@ clone_if_missing() {
 
 clone_if_missing https://github.com/romkatv/powerlevel10k.git \
   "$zsh_root/themes/powerlevel10k"
+
+# Keep Powerlevel10k current when the managed checkout has no local edits.
+# This avoids running stale prompt code against newer Zsh releases.
+p10k_root="$zsh_root/themes/powerlevel10k"
+if git -C "$p10k_root" diff --quiet && \
+   git -C "$p10k_root" diff --cached --quiet; then
+  if [[ -f "$p10k_root/.git/shallow" ]]; then
+    git -C "$p10k_root" fetch --unshallow origin master
+  else
+    git -C "$p10k_root" fetch origin master
+  fi
+  git -C "$p10k_root" merge --ff-only origin/master
+else
+  printf 'Powerlevel10k has local edits; leaving it unchanged.\n' >&2
+fi
+
 clone_if_missing https://github.com/Aloxaf/fzf-tab.git \
   "$zsh_root/plugins/fzf-tab"
 clone_if_missing https://github.com/zsh-users/zsh-autosuggestions.git \
