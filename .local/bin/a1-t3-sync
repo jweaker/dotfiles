@@ -1,0 +1,39 @@
+#!/bin/sh
+set -eu
+
+app_info='/Applications/T3 Code (Nightly).app/Contents/Info.plist'
+state_dir="${HOME}/Library/Application Support/A1 Workstation"
+state_file="${state_dir}/t3-version"
+lock_dir="${state_dir}/t3-sync.lock"
+log_prefix='[a1-t3-sync]'
+
+if [ ! -f "$app_info" ]; then
+  printf '%s T3 Code Nightly is not installed.\n' "$log_prefix" >&2
+  exit 0
+fi
+
+mkdir -p "$state_dir"
+if ! mkdir "$lock_dir" 2>/dev/null; then
+  exit 0
+fi
+trap 'rmdir "$lock_dir" 2>/dev/null || true' EXIT HUP INT TERM
+
+version="$(/usr/bin/plutil -extract CFBundleShortVersionString raw "$app_info")"
+case "$version" in
+  ''|*[!0-9A-Za-z._+-]*)
+    printf '%s Refusing unexpected version: %s\n' "$log_prefix" "$version" >&2
+    exit 1
+    ;;
+esac
+
+installed="$(/usr/bin/ssh -o BatchMode=yes -o ConnectTimeout=8 a1 '~/.local/bin/t3-sync status' 2>/dev/null | /usr/bin/awk -F= '$1 == "active" || $1 == "pending" { print $2 }')"
+if printf '%s\n' "$installed" | /usr/bin/grep -Fxq "$version"; then
+  printf '%s\n' "$version" >"$state_file"
+  exit 0
+fi
+
+printf '%s Queuing A1 T3 %s.\n' "$log_prefix" "$version"
+/usr/bin/ssh -o BatchMode=yes -o ConnectTimeout=8 a1 \
+  "~/.local/bin/t3-sync install '$version' --defer"
+printf '%s\n' "$version" >"$state_file"
+printf '%s A1 T3 %s installed; activation will wait for idle providers.\n' "$log_prefix" "$version"

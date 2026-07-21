@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>xyz.jweaker.a1-t3-sync</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/jweaker/.local/bin/a1-t3-sync</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>StartInterval</key>
+  <integer>300</integer>
+  <key>WatchPaths</key>
+  <array>
+    <string>/Applications/T3 Code (Nightly).app/Contents/Info.plist</string>
+  </array>
+  <key>StandardOutPath</key>
+  <string>/Users/jweaker/Library/Logs/a1-t3-sync.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/jweaker/Library/Logs/a1-t3-sync.error.log</string>
+</dict>
+</plist>
