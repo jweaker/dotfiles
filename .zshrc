@@ -2,7 +2,9 @@
 
 [[ -o interactive ]] || return
 
-export ZSH="${ZSH:-$HOME/.zsh}"
+# Use one managed plugin root on every host. Do not inherit an application's
+# stale ZSH value, which can otherwise select a different prompt/plugin tree.
+export ZSH="$HOME/.zsh"
 
 if [[ -t 0 && -t 1 && -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
