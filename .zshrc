@@ -6,7 +6,9 @@
 # stale ZSH value, which can otherwise select a different prompt/plugin tree.
 export ZSH="$HOME/.zsh"
 
-if [[ -t 0 && -t 1 && -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+# Zsh renders prompts on stderr. Some macOS terminal launchers keep stderr on
+# the PTY while redirecting stdout, so stdout is not a reliable prompt test.
+if [[ -t 2 && -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
