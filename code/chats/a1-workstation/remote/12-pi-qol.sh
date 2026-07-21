@@ -15,7 +15,11 @@ apt-get install -y \
 usermod -s /usr/bin/zsh "$user_name"
 loginctl enable-linger "$user_name"
 install -d -m 700 -o "$user_name" -g "$user_name" \
-  "$home_dir/.config" "$home_dir/.local/bin" "$home_dir/.local/state"
+  "$home_dir/.config" "$home_dir/.local/bin" "$home_dir/.local/share" "$home_dir/.local/state"
+# `install -d` preserves the owner of directories that already exist. Repair
+# leftovers from older sudo-based setup attempts before YADM writes beneath
+# ~/.local/share.
+chown -R "$user_name:$user_name" "$home_dir/.local" "$home_dir/.config"
 
 if command -v batcat >/dev/null 2>&1 && [[ ! -e /usr/local/bin/bat ]]; then
   ln -s /usr/bin/batcat /usr/local/bin/bat

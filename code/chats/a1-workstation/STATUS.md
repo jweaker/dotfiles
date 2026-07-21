@@ -19,13 +19,12 @@
 - The official standalone Codex build, Bubblewrap AppArmor profile, and Remote Control daemon are working. A fresh phone pairing code can be generated on demand.
 - Powerlevel10k prompt selection is deterministic across embedded and normal terminals; Starship is no longer a conditional fallback.
 - Portable shell/dotfile changes, Mac helper LaunchAgents, and the non-secret workstation provisioning assets are committed to `jweaker/dotfiles`.
-- Cloudflare Tunnel `a1-code` routes `code.jweaker.xyz` to a fail-closed Access bridge. The bridge stays disabled until its Access AUD is configured.
+- Cloudflare Tunnel `a1-code` routes `code.jweaker.xyz` through Cloudflare Access to the JWT-validating T3 pairing bridge. The public hostname redirects to Access and the origin rejects requests without a valid assertion.
 - The accidental `code.jweaker.xyz.itsocr.com` DNS record was deleted; the existing DigitalOcean/itsocr tunnels were not modified.
 
 ## Intentionally waiting on the owner
 
 - T3 Connect headless authorization code, then service restart/verification.
-- Cloudflare Access self-hosted app and exact-email OTP policy, then its AUD tag.
 - A fresh Claude Code login; the Mac Keychain entry contained no active tokens and was not usable.
 - Change the password disclosed in chat on both macOS and A1. SSH password authentication is already disabled.
 - Enter the Raspberry Pi sudo password once to install its staged quality-of-life packages; SSH key access now works.

@@ -74,13 +74,18 @@ ai-account use claude second
 
 ## Codex Remote Control
 
-The standalone Codex build, Bubblewrap, and Ubuntu's narrow AppArmor profile are installed. The A1 Remote Control daemon is enabled for the currently selected Codex profile. Generate a fresh short-lived phone pairing code with:
+The standalone Codex build, Bubblewrap, and Ubuntu's narrow AppArmor profile are installed. A persistent Remote Control daemon is enabled for the `main` profile. Generate a fresh short-lived phone pairing code with:
 
 ```sh
-ssh -t a1 'codex remote-control pair'
+ssh -t a1 'ai-account run codex main remote-control pair'
 ```
 
-The phone must confirm the same ChatGPT account and workspace as the selected A1 profile. A different ChatGPT account cannot control that host pairing.
+The phone must confirm the same ChatGPT account and workspace as that A1 profile. A different ChatGPT account cannot control the `main` host pairing. To pair through another already-enrolled profile without changing the default account:
+
+```sh
+ssh a1 'systemctl --user enable --now codex-remote-control@new.service'
+ssh -t a1 'ai-account run codex new remote-control pair'
+```
 
 ## Platform boundaries
 
